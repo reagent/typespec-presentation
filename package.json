@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "marp presentation.md --html --output presentation.html"
+  },
+  "dependencies": {
+    "@marp-team/marp-cli": "^3.4.0"
+  }
+}
