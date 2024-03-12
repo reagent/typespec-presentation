@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "marp presentation.md --html --output presentation.html"
+    "build": "marp presentation.md --title 'Building Type Safe APIs' --html --output index.html"
   },
   "dependencies": {
     "@marp-team/marp-cli": "^3.4.0"
