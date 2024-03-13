@@ -182,7 +182,7 @@ describe 'Blog API' do
                   id: { type: :integer },
                   title: { type: :string },
                   body: { type: :string },
-                  published_at: {type: string, format: 'date-time', nullable: true}
+                  published_at: {type: :string, format: 'date-time', nullable: true}
                 }
                 required: [ 'id', 'title', 'body', 'published_at' ]
               }
@@ -276,7 +276,7 @@ TypeSpec is to APIs as TypeScript is to code
 
 ---
 
-# [Service Definition](https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvaHR0cCI7CtIZb3BlbmFwaSI7Cgp1c2luZyBUeXBlU3BlYy5IdHRwOwoKbW9kZWwgUG9zdHMgewogIHRvdGFsOiBpbnQzMjsKICBwxBo6IEFycmF5PMQhICBpZMsgICB0aXRsZTogc3RyaW5nxhNib2R5zhJwdWJsaXNoZWRfYXQ6IHV0Y0RhdGVUaW1lIHwgbnVsbMQmfT47Cn0KCkBzZXJ2aWNlCm5hbWVzcGFjZSBCbG9nU8YW5QClQHJvdXRlKCLlAJ0iKcQSZ2V0CiAgb3AgbGlzdCgpOuYA0zsKfQ%3D%3D&e=%40typespec%2Fopenapi3&options=%7B%7D)
+# [Service Definition][playground-basic]
 
 <div class="columns">
   <div>
@@ -531,4 +531,17 @@ paths:
 # [Putting it All Together][demo]
 
 [demo]: https://github.com/reagent/blog-openapi
+
+---
+
+# Additional Resources
+
+- [TypeSpec Playground](https://typespec.io/playground)
+  - [Blog service example][playground-basic]
+  - [Service with failure modes][playground-advanced]
+- [OpenAPI (Swagger) Editor](https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi) - VSCode Plugin
+- [`additionalProperties` support in TypeSpec](https://typespec.io/docs/getting-started/typespec-for-openapi-dev#additionalproperties)
+- [`@jsonExample` decorator support](https://github.com/microsoft/typespec/issues/2700)
+
+[playground-basic]: https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvaHR0cCI7CtIZb3BlbmFwaSI7Cgp1c2luZyBUeXBlU3BlYy5IdHRwOwoKbW9kZWwgUG9zdHMgewogIHRvdGFsOiBpbnQzMjsKICBwxBo6IEFycmF5PMQhICBpZMsgICB0aXRsZTogc3RyaW5nxhNib2R5zhJwdWJsaXNoZWRfYXQ6IHV0Y0RhdGVUaW1lIHwgbnVsbMQmfT47Cn0KCkBzZXJ2aWNlCm5hbWVzcGFjZSBCbG9nU8YW5QClQHJvdXRlKCLlAJ0iKcQSZ2V0CiAgb3AgbGlzdCgpOuYA0zsKfQ%3D%3D&e=%40typespec%2Fopenapi3&options=%7B%7D
 [playground-advanced]: https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvb3BlbmFwaSI7CtIcaHR0cCI7CgovLyDEC3M6Ly9qc29uLXNjaGVtYS5vcmcvdW5kZXJzdGFuZGluZy3LHi9yZWZlcmVuY2Uvc3RyaW5nI2J1aWx0LWluLWZvcm1hdHMKQMYJKCJ1dWlkIikKc2NhbGFyIFVVSUQgZXh0ZW5kcyDGPDsKyi1lbWFpbMouRcQP2y91cmnLW1JJ0ittb2RlbCBVc2VyIHsKICBpZDrlAIM7CiAgxWw6xmTEEHdlYnNpdGVfdXJpOsRNOwp95QEeVW5pb25zCmFsaWFzIEhUVFBTdWNjZXNzU3RhdHVzID0gMjAwIHwgMjAxO8slRmFpbHVyZcklNMUlNDAxxQYzxQY0xAYyMjsKCnVzaW5nIFR5cGVTcGVjLk9wZW5BUEk70BhIdHRw5AEAZXJyb3LnANxFxAzlAN1tZXNzYWdlOukA%2FuYAwFJlc3BvbnNlc8cx6wDDyBs8Q29kZekBPfEA5CwgVD7FYkBzxRDFLl86IMQI5AE6QGJvZHkgxAU6IFTFd8pq5wEI2mrtASnfZ8pn5QD2y2tPSzxUPiBp7QC9yXQyMDDkAMM7xyxDcmVhdGVk3TExzDFVbmF1dGhvcml6ZWTIM%2FAA2DQwMckwTm90Rm91btssND7kAcdzZXJ2aWNlCm5hbWVzcGFjZeUCqXNTxhfmAQtyb3V0ZSgidcQZL3tpZH0iKcQXZ2V0CiAgb3AgZmV0Y2go6ALYKTrkAQrERj4gfOoAiHztAMPkATc%3D&e=%40typespec%2Fopenapi3&options=%7B%7D
