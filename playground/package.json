@@ -1,0 +1,15 @@
+{
+  "name": "playground",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsp compile --watch .",
+    "client": "swagger-typescript-api --axios --path ./openapi.yaml --name openapi -o ."
+  },
+  "dependencies": {
+    "@typespec/compiler": "^0.57.0",
+    "@typespec/openapi3": "^0.57.0",
+    "axios": "^1.7.2",
+    "swagger-typescript-api": "^13.0.12"
+  }
+}

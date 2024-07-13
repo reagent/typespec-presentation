@@ -19,7 +19,7 @@
   gap: 1rem;
 }
 ;">
-<h1 id="building-type-safe-apis">Building Type Safe APIs</h1>
+<h1 id="schema-first-api-development">Schema-First API Development</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="2" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -32,8 +32,11 @@
   gap: 1rem;
 }
 ;">
-<h1 id="building-type-safe-apis-1">Building Type Safe APIs*</h1>
-<h2 id="with-rails">With Rails</h2>
+<h1 id="what-is-an-api-schema">What is an API Schema?</h1>
+<ul>
+<li>Describes the operations and structure of your API</li>
+<li>Used as the source of truth for exposing HTTP services</li>
+</ul>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="3" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -46,9 +49,10 @@
   gap: 1rem;
 }
 ;">
-<h1 id="building-type-safe-apis-2">Building Type Safe APIs*</h1>
-<h2 id="with-rails-1">With Rails*</h2>
-<h3 id="when-you-cant-use-graphql"><em>(When You Can't Use GraphQL)</em></h3>
+<h1 id="openapi-aka-swagger">OpenAPI (aka Swagger)</h1>
+<blockquote>
+<p>The <a href="https://swagger.io/specification/">OpenAPI Specification</a> provides a formal standard for describing HTTP APIs.</p>
+</blockquote>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="4" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -62,11 +66,6 @@
 }
 ;">
 <h1 id="why">Why?</h1>
-<ul>
-<li>Public API that needs end-user documentation</li>
-<li>Different client / server teams (JS / Ruby)</li>
-<li>Stakeholder communication</li>
-</ul>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="5" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -79,12 +78,102 @@
   gap: 1rem;
 }
 ;">
-<h1 id="making-your-api-type-safe">Making Your API &quot;Type Safe&quot;</h1>
-<ul>
-<li>Generate an OpenAPI specification</li>
-<li>Validate requests and responses</li>
-<li>Generate clients in target language(s)</li>
-</ul>
+<h1 id="generate-client-code">Generate Client Code</h1>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typescript"><span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">Post</span> {
+  <span class="hljs-attr">id</span>: <span class="hljs-title class_">Uuid</span>;
+  <span class="hljs-attr">title</span>: <span class="hljs-built_in">string</span>;
+  <span class="hljs-attr">body</span>: <span class="hljs-built_in">string</span>;
+  <span class="hljs-comment">/** <span class="hljs-doctag">@format</span> <span class="hljs-variable">date</span>-time */</span>
+  published_at?: <span class="hljs-built_in">string</span>;
+  <span class="hljs-attr">author</span>: <span class="hljs-title class_">User</span>;
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">User</span> {
+  <span class="hljs-attr">id</span>: <span class="hljs-title class_">Uuid</span>;
+  <span class="hljs-attr">email</span>: <span class="hljs-title class_">Email</span>;
+  name?: <span class="hljs-built_in">string</span>;
+}
+
+<span class="hljs-comment">/** <span class="hljs-doctag">@format</span> email */</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">type</span> <span class="hljs-title class_">Email</span> = <span class="hljs-built_in">string</span>;
+
+<span class="hljs-comment">/** <span class="hljs-doctag">@format</span> uuid */</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">type</span> <span class="hljs-title class_">Uuid</span> = <span class="hljs-built_in">string</span>;
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typescript"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@title</span> My Service
+ * <span class="hljs-doctag">@version</span> 0.0.0
+ */</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Api</span>&lt;
+  <span class="hljs-title class_">SecurityDataType</span> <span class="hljs-keyword">extends</span> <span class="hljs-built_in">unknown</span>
+&gt; <span class="hljs-keyword">extends</span> <span class="hljs-title class_">HttpClient</span>&lt;<span class="hljs-title class_">SecurityDataType</span>&gt; {
+  posts = {
+    <span class="hljs-comment">/**
+     * No description
+     *
+     * <span class="hljs-doctag">@name</span> <span class="hljs-variable">PostsList</span>
+     * <span class="hljs-doctag">@request</span> GET:/posts
+     */</span>
+    <span class="hljs-attr">postsList</span>: <span class="hljs-function">(<span class="hljs-params">params: RequestParams = {}</span>) =&gt;</span>
+      <span class="hljs-variable language_">this</span>.<span class="hljs-property">request</span>&lt;<span class="hljs-title class_">Post</span>[], <span class="hljs-built_in">any</span>&gt;({
+        <span class="hljs-attr">path</span>: <span class="hljs-string">`/posts`</span>,
+        <span class="hljs-attr">method</span>: <span class="hljs-string">&quot;GET&quot;</span>,
+        <span class="hljs-attr">format</span>: <span class="hljs-string">&quot;json&quot;</span>,
+        ...params,
+      }),
+
+    <span class="hljs-comment">/**
+     * No description
+     *
+     * <span class="hljs-doctag">@name</span> <span class="hljs-variable">PostsCreate</span>
+     * <span class="hljs-doctag">@request</span> POST:/posts
+     */</span>
+    <span class="hljs-attr">postsCreate</span>: <span class="hljs-function">(<span class="hljs-params">
+      data: {
+        post: Post;
+      },
+      params: RequestParams = {}
+    </span>) =&gt;</span>
+      <span class="hljs-variable language_">this</span>.<span class="hljs-property">request</span>&lt;
+        <span class="hljs-title class_">Post</span>,
+        {
+          <span class="hljs-attr">message</span>: <span class="hljs-built_in">string</span>;
+        }
+      &gt;({
+        <span class="hljs-attr">path</span>: <span class="hljs-string">`/posts`</span>,
+        <span class="hljs-attr">method</span>: <span class="hljs-string">&quot;POST&quot;</span>,
+        <span class="hljs-attr">body</span>: data,
+        <span class="hljs-attr">type</span>: <span class="hljs-title class_">ContentType</span>.<span class="hljs-property">Json</span>,
+        <span class="hljs-attr">format</span>: <span class="hljs-string">&quot;json&quot;</span>,
+        ...params,
+      }),
+
+    <span class="hljs-comment">/**
+     * No description
+     *
+     * <span class="hljs-doctag">@name</span> <span class="hljs-variable">PostsFetch</span>
+     * <span class="hljs-doctag">@request</span> GET:/posts/{id}
+     */</span>
+    <span class="hljs-attr">postsFetch</span>: <span class="hljs-function">(<span class="hljs-params">id: Uuid, params: RequestParams = {}</span>) =&gt;</span>
+      <span class="hljs-variable language_">this</span>.<span class="hljs-property">request</span>&lt;
+        <span class="hljs-title class_">Post</span>,
+        {
+          <span class="hljs-attr">message</span>: <span class="hljs-built_in">string</span>;
+        }
+      &gt;({
+        <span class="hljs-attr">path</span>: <span class="hljs-string">`/posts/<span class="hljs-subst">${id}</span>`</span>,
+        <span class="hljs-attr">method</span>: <span class="hljs-string">&quot;GET&quot;</span>,
+        <span class="hljs-attr">format</span>: <span class="hljs-string">&quot;json&quot;</span>,
+        ...params,
+      }),
+  };
+}
+</code></pre>
+</div>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="6" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -97,11 +186,8 @@
   gap: 1rem;
 }
 ;">
-<h1 id="openapi">OpenAPI</h1>
-<blockquote>
-<p>The OpenAPI Specification provides a formal standard for describing HTTP APIs.</p>
-</blockquote>
-<p><a href="https://www.openapis.org/">https://www.openapis.org/</a></p>
+<h1 id="provide-documentation">Provide Documentation</h1>
+<p><img src="./assets/generated-ui.png" alt="" style="height:600px;" /></p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="7" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -114,8 +200,7 @@
   gap: 1rem;
 }
 ;">
-<h1 id="documenting-endpoints">Documenting Endpoints</h1>
-<h2 id="with-openapi">With OpenAPI</h2>
+<h1 id="validate-interactions">Validate Interactions</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="8" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -128,199 +213,12 @@
   gap: 1rem;
 }
 ;">
-<p><img src="./images/post-list.png" alt="" style="height:700px;" /></p>
+<h1 id="interagentcommittee"><a href="https://github.com/interagent/committee">interagent/committee</a></h1>
+<blockquote>
+<p>A collection of middleware to help build services with JSON Schema, OpenAPI 2, OpenAPI 3.</p>
+</blockquote>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="9" data-theme="uncover" data-style=".columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-" lang="en-US" style="--theme:uncover;--style:.columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-;">
-<h1 id="by-hand-yaml">By Hand (YAML)</h1>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">paths:</span>
-  <span class="hljs-string">/posts:</span>
-    <span class="hljs-attr">get:</span>
-      <span class="hljs-attr">tags:</span>
-        <span class="hljs-bullet">-</span> <span class="hljs-string">post</span>
-      <span class="hljs-attr">operationId:</span> <span class="hljs-string">post-list</span>
-      <span class="hljs-attr">description:</span> <span class="hljs-string">List</span> <span class="hljs-string">all</span> <span class="hljs-string">posts</span> <span class="hljs-string">available</span>
-      <span class="hljs-attr">parameters:</span> []
-      <span class="hljs-attr">responses:</span>
-        <span class="hljs-attr">&quot;200&quot;:</span>
-          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
-          <span class="hljs-attr">content:</span>
-            <span class="hljs-attr">application/json:</span>
-              <span class="hljs-attr">schema:</span>
-                <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
-                <span class="hljs-attr">properties:</span>
-                  <span class="hljs-attr">total:</span>
-                    <span class="hljs-attr">type:</span> <span class="hljs-string">integer</span>
-                  <span class="hljs-attr">posts:</span>
-                    <span class="hljs-attr">type:</span> <span class="hljs-string">array</span>
-                    <span class="hljs-attr">items:</span>
-                      <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
-                      <span class="hljs-attr">properties:</span>
-                        <span class="hljs-attr">id:</span>
-                          <span class="hljs-attr">type:</span> <span class="hljs-string">number</span>
-                        <span class="hljs-attr">title:</span>
-                          <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
-                        <span class="hljs-attr">body:</span>
-                          <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
-                        <span class="hljs-attr">published_at:</span>
-                          <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
-                          <span class="hljs-attr">format:</span> <span class="hljs-string">date-time</span>
-                          <span class="hljs-attr">nullable:</span> <span class="hljs-literal">true</span>
-</code></pre>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="10" data-theme="uncover" data-style=".columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-" lang="en-US" style="--theme:uncover;--style:.columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-;">
-<h1 id="using-framework-tooling">Using Framework Tooling</h1>
-<h2 id="nestjs">(<a href="https://docs.nestjs.com/openapi/introduction">Nest.js</a>)</h2>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="11" data-theme="uncover" data-style=".columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-" lang="en-US" style="--theme:uncover;--style:.columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-;">
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typescript"><span class="hljs-keyword">type</span> <span class="hljs-variable constant_">ID</span> = <span class="hljs-built_in">number</span>;
-
-<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Post</span> {
-  <span class="hljs-meta">@ApiProperty</span>()
-  <span class="hljs-attr">id</span>: <span class="hljs-variable constant_">ID</span>;
-
-  <span class="hljs-meta">@ApiProperty</span>()
-  <span class="hljs-attr">title</span>: <span class="hljs-built_in">string</span>;
-
-  <span class="hljs-meta">@ApiProperty</span>()
-  <span class="hljs-attr">body</span>: <span class="hljs-built_in">string</span>;
-
-  <span class="hljs-meta">@ApiProperty</span>({ <span class="hljs-attr">format</span>: <span class="hljs-string">&quot;date-time&quot;</span>, <span class="hljs-attr">nullable</span>: <span class="hljs-literal">true</span> })
-  <span class="hljs-attr">published_at</span>: <span class="hljs-built_in">string</span> | <span class="hljs-literal">null</span>;
-}
-
-<span class="hljs-meta">@ApiExtraModels</span>(<span class="hljs-title class_">Post</span>)
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">Posts</span> {
-  <span class="hljs-meta">@ApiProperty</span>()
-  <span class="hljs-attr">total</span>: <span class="hljs-built_in">number</span>;
-
-  <span class="hljs-meta">@ApiProperty</span>({ <span class="hljs-attr">allOf</span>: [{ <span class="hljs-attr">$ref</span>: <span class="hljs-title function_">getSchemaPath</span>(<span class="hljs-title class_">Post</span>) }] })
-  <span class="hljs-attr">posts</span>: <span class="hljs-title class_">Array</span>&lt;<span class="hljs-title class_">Post</span>&gt;;
-}
-
-<span class="hljs-meta">@Controller</span>(<span class="hljs-string">&quot;posts&quot;</span>)
-<span class="hljs-meta">@ApiTags</span>(<span class="hljs-string">&quot;post&quot;</span>)
-<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">PostsController</span> {
-  <span class="hljs-meta">@Get</span>()
-  <span class="hljs-meta">@ApiOperation</span>({
-    <span class="hljs-attr">operationId</span>: <span class="hljs-string">&quot;posts-list&quot;</span>,
-    <span class="hljs-attr">description</span>: <span class="hljs-string">&quot;List all posts available&quot;</span>,
-  })
-  <span class="hljs-meta">@ApiResponse</span>({ <span class="hljs-attr">status</span>: <span class="hljs-number">200</span>, <span class="hljs-attr">description</span>: <span class="hljs-string">&quot;OK&quot;</span>, <span class="hljs-attr">type</span>: <span class="hljs-title class_">Posts</span> })
-  <span class="hljs-keyword">async</span> <span class="hljs-title function_">index</span>(): <span class="hljs-title class_">Promise</span>&lt;<span class="hljs-title class_">Posts</span>&gt; {
-    <span class="hljs-comment">// return { total: 0, posts: [] };</span>
-  }
-}
-</code></pre>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="12" data-theme="uncover" data-style=".columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-" lang="en-US" style="--theme:uncover;--style:.columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-;">
-<h1 id="using-framework-tooling-1">Using Framework Tooling</h1>
-<h2 id="rswag-ruby"><a href="https://github.com/rswag/rswag">rswag</a> (Ruby)</h2>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="13" data-theme="uncover" data-style=".columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-" lang="en-US" style="--theme:uncover;--style:.columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-;">
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-ruby"><span class="hljs-keyword">require</span> <span class="hljs-string">&#x27;swagger_helper&#x27;</span>
-
-describe <span class="hljs-string">&#x27;Blog API&#x27;</span> <span class="hljs-keyword">do</span>
-  path <span class="hljs-string">&#x27;/blogs&#x27;</span> <span class="hljs-keyword">do</span>
-    get <span class="hljs-string">&#x27;Fetch all posts&#x27;</span> <span class="hljs-keyword">do</span>
-      tags <span class="hljs-string">&#x27;post&#x27;</span>
-      consumes <span class="hljs-string">&#x27;application/json&#x27;</span>
-
-      response <span class="hljs-string">&#x27;200&#x27;</span>, <span class="hljs-string">&#x27;blog found&#x27;</span> <span class="hljs-keyword">do</span>
-        schema({
-          <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:object</span>,
-          <span class="hljs-symbol">properties:</span> {
-            <span class="hljs-symbol">total:</span> {<span class="hljs-symbol">type:</span> <span class="hljs-symbol">:integer</span>},
-            <span class="hljs-symbol">posts:</span> {
-              <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:array</span>,
-              <span class="hljs-symbol">items:</span> {
-                <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:object</span>,
-                <span class="hljs-symbol">properties:</span> {
-                  <span class="hljs-symbol">id:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:integer</span> },
-                  <span class="hljs-symbol">title:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:string</span> },
-                  <span class="hljs-symbol">body:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:string</span> },
-                  <span class="hljs-symbol">published_at:</span> {<span class="hljs-symbol">type:</span> <span class="hljs-symbol">:string</span>, <span class="hljs-symbol">format:</span> <span class="hljs-string">&#x27;date-time&#x27;</span>, <span class="hljs-symbol">nullable:</span> <span class="hljs-literal">true</span>}
-                }
-                <span class="hljs-symbol">required:</span> [ <span class="hljs-string">&#x27;id&#x27;</span>, <span class="hljs-string">&#x27;title&#x27;</span>, <span class="hljs-string">&#x27;body&#x27;</span>, <span class="hljs-string">&#x27;published_at&#x27;</span> ]
-              }
-            }
-          },
-          <span class="hljs-symbol">required:</span> [ <span class="hljs-string">&#x27;total&#x27;</span>, <span class="hljs-string">&#x27;posts&#x27;</span> ]
-        })
-
-        create(<span class="hljs-symbol">:post</span>, <span class="hljs-symbol">title:</span> <span class="hljs-string">&#x27;Title&#x27;</span>, <span class="hljs-symbol">body:</span> <span class="hljs-string">&#x27;Body&#x27;</span>)
-        run_test!
-      <span class="hljs-keyword">end</span>
-    <span class="hljs-keyword">end</span>
-  <span class="hljs-keyword">end</span>
-<span class="hljs-keyword">end</span>
-</code></pre>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="14" data-theme="uncover" data-style=".columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-" lang="en-US" style="--theme:uncover;--style:.columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-;">
-<h1 id="validation">Validation</h1>
-<p>The <a href="%5Bhttps://github.com/interagent/committee%5D">committee gem</a> is a collection of middlewares that you can use to validate requests and responses to ensure they conform to your specification.</p>
-<p><a href="https://github.com/interagent/committee">https://github.com/interagent/committee</a></p>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="15" data-theme="uncover" data-style=".columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
@@ -341,7 +239,7 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
                       <span class="hljs-symbol">strict:</span> <span class="hljs-literal">true</span> <span class="hljs-comment"># HTTP 404 on undefined route in spec</span>
 </code></pre>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="16" data-theme="uncover" data-style=".columns {
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="10" data-theme="uncover" data-style=".columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
@@ -364,6 +262,93 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
 <span class="hljs-keyword">end</span>
 </code></pre>
 </section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="11" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="how">How?</h1>
+<ul>
+<li>Create a machine-readable specification</li>
+<li>Publish for consumption</li>
+</ul>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="12" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="what-can-i-do-with-this">What Can I Do With This?</h1>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="13" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="generate-documentation">Generate Documentation</h1>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="14" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<p><img src="./assets/swagger-ui.png" alt="" style="height:700px;" /></p>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="15" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="tooling">Tooling</h1>
+<ul>
+<li><a href="https://swagger.io/tools/swagger-codegen/">Swagger Codegen</a></li>
+<li><a href="https://swagger.io/tools/swagger-ui/">Swagger UI</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi">OpenAPI Editor for VSCode</a></li>
+</ul>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="16" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="generate-client-libraries">Generate Client Libraries</h1>
+</section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="17" data-theme="uncover" data-style=".columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -375,7 +360,7 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
   gap: 1rem;
 }
 ;">
-<h1 id="and-that-works-pretty-well">And that works pretty well ...</h1>
+<p><img src="./assets/swagger-codegen.png" alt="" style="height:700px;" /></p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="18" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -388,7 +373,13 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
   gap: 1rem;
 }
 ;">
-<h1 id="except-">... except ...</h1>
+<h1 id="tooling-1">Tooling</h1>
+<ul>
+<li><a href="https://swagger.io/tools/swagger-codegen/">Swagger Codegen</a></li>
+<li><a href="https://github.com/acacode/swagger-typescript-api">swagger-typescript-api</a></li>
+<li><a href="https://github.com/astahmer/openapi-zod-client">openapi-zod-client</a></li>
+<li><a href="https://github.com/OpenAPITools/openapi-generator">openapi-generator</a></li>
+</ul>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="19" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -401,7 +392,7 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
   gap: 1rem;
 }
 ;">
-<h1 id="its-a-total-pain-in-the-%F0%9F%8D%91">... it's a total pain in the <img class="emoji" draggable="false" alt="🍑" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/1f351.svg" data-marp-twemoji=""/></h1>
+<h1 id="life-is-good-right">Life is Good, Right?</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="20" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -414,11 +405,7 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
   gap: 1rem;
 }
 ;">
-<h1 id="why-even-have-computers">Why Even Have Computers?</h1>
-<ul>
-<li>How can I manage a 5000+ line spec file by hand?</li>
-<li>Why do I need to embed OpenAPI internals in my code?</li>
-</ul>
+<h1 id="but">But ...</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="21" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -431,7 +418,7 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
   gap: 1rem;
 }
 ;">
-<p><img src="./images/better-way.gif" alt="" style="height:450px;" /></p>
+<h1 id="have-you-tried-to-edit-an-openapi-spec-by-hand">Have you tried to edit an OpenAPI spec by hand?</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="22" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -444,11 +431,126 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
   gap: 1rem;
 }
 ;">
-<h1 id="typespec">TypeSpec</h1>
-<blockquote>
-<p>Describe your data up front and generate schemas, API specifications, client / server code, docs, and more.</p>
-</blockquote>
-<p><a href="https://typespec.io/">https://typespec.io/</a></p>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">paths:</span>
+  <span class="hljs-string">/posts:</span>
+    <span class="hljs-attr">get:</span>
+      <span class="hljs-attr">operationId:</span> <span class="hljs-string">posts-list</span>
+      <span class="hljs-attr">parameters:</span> []
+      <span class="hljs-attr">responses:</span>
+        <span class="hljs-attr">&quot;200&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-attr">type:</span> <span class="hljs-string">array</span>
+                <span class="hljs-attr">items:</span>
+                  <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Post&quot;</span>
+    <span class="hljs-attr">post:</span>
+      <span class="hljs-attr">operationId:</span> <span class="hljs-string">posts-create</span>
+      <span class="hljs-attr">parameters:</span> []
+      <span class="hljs-attr">responses:</span>
+        <span class="hljs-attr">&quot;201&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded</span> <span class="hljs-string">and</span> <span class="hljs-string">a</span> <span class="hljs-string">new</span> <span class="hljs-string">resource</span> <span class="hljs-string">has</span> <span class="hljs-string">been</span> <span class="hljs-string">created</span> <span class="hljs-string">as</span> <span class="hljs-string">a</span> <span class="hljs-string">result.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Post&quot;</span>
+        <span class="hljs-attr">&quot;422&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">Client</span> <span class="hljs-string">error</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+                <span class="hljs-attr">properties:</span>
+                  <span class="hljs-attr">message:</span>
+                    <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+                <span class="hljs-attr">required:</span>
+                  <span class="hljs-bullet">-</span> <span class="hljs-string">message</span>
+      <span class="hljs-attr">requestBody:</span>
+        <span class="hljs-attr">required:</span> <span class="hljs-literal">true</span>
+        <span class="hljs-attr">content:</span>
+          <span class="hljs-attr">application/json:</span>
+            <span class="hljs-attr">schema:</span>
+              <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+              <span class="hljs-attr">properties:</span>
+                <span class="hljs-attr">post:</span>
+                  <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Post&quot;</span>
+              <span class="hljs-attr">required:</span>
+                <span class="hljs-bullet">-</span> <span class="hljs-string">post</span>
+  <span class="hljs-string">/posts/{id}:</span>
+    <span class="hljs-attr">get:</span>
+      <span class="hljs-attr">operationId:</span> <span class="hljs-string">posts-fetch</span>
+      <span class="hljs-attr">parameters:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">id</span>
+          <span class="hljs-attr">in:</span> <span class="hljs-string">path</span>
+          <span class="hljs-attr">required:</span> <span class="hljs-literal">true</span>
+          <span class="hljs-attr">schema:</span>
+            <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/uuid&quot;</span>
+      <span class="hljs-attr">responses:</span>
+        <span class="hljs-attr">&quot;200&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Post&quot;</span>
+        <span class="hljs-attr">&quot;404&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">server</span> <span class="hljs-string">cannot</span> <span class="hljs-string">find</span> <span class="hljs-string">the</span> <span class="hljs-string">requested</span> <span class="hljs-string">resource.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+                <span class="hljs-attr">properties:</span>
+                  <span class="hljs-attr">message:</span>
+                    <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+                <span class="hljs-attr">required:</span>
+                  <span class="hljs-bullet">-</span> <span class="hljs-string">message</span>
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">components:</span>
+  <span class="hljs-attr">schemas:</span>
+    <span class="hljs-attr">Post:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+      <span class="hljs-attr">required:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">title</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">body</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">author</span>
+      <span class="hljs-attr">properties:</span>
+        <span class="hljs-attr">id:</span>
+          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/uuid&quot;</span>
+        <span class="hljs-attr">title:</span>
+          <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+        <span class="hljs-attr">body:</span>
+          <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+        <span class="hljs-attr">published_at:</span>
+          <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+          <span class="hljs-attr">format:</span> <span class="hljs-string">date-time</span>
+        <span class="hljs-attr">author:</span>
+          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/User&quot;</span>
+    <span class="hljs-attr">User:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+      <span class="hljs-attr">required:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">email</span>
+      <span class="hljs-attr">properties:</span>
+        <span class="hljs-attr">id:</span>
+          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/uuid&quot;</span>
+        <span class="hljs-attr">email:</span>
+          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/email&quot;</span>
+        <span class="hljs-attr">name:</span>
+          <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+    <span class="hljs-attr">email:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">format:</span> <span class="hljs-string">email</span>
+    <span class="hljs-attr">uuid:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">format:</span> <span class="hljs-string">uuid</span>
+</code></pre>
+  </div>
+</div>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="23" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -461,7 +563,7 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
   gap: 1rem;
 }
 ;">
-<p>TypeSpec is to APIs as TypeScript is to code</p>
+<h1 id="when-its-6000-lines-long">When it's 6000+ lines long?</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="24" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -474,80 +576,7 @@ config.middleware.use <span class="hljs-title class_">Committee</span><span clas
   gap: 1rem;
 }
 ;">
-<h1 id="service-definition"><a href="https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvaHR0cCI7CtIZb3BlbmFwaSI7Cgp1c2luZyBUeXBlU3BlYy5IdHRwOwoKbW9kZWwgUG9zdHMgewogIHRvdGFsOiBpbnQzMjsKICBwxBo6IEFycmF5PMQhICBpZMsgICB0aXRsZTogc3RyaW5nxhNib2R5zhJwdWJsaXNoZWRfYXQ6IHV0Y0RhdGVUaW1lIHwgbnVsbMQmfT47Cn0KCkBzZXJ2aWNlCm5hbWVzcGFjZSBCbG9nU8YW5QClQHJvdXRlKCLlAJ0iKcQSZ2V0CiAgb3AgbGlzdCgpOuYA0zsKfQ%3D%3D&amp;e=%40typespec%2Fopenapi3&amp;options=%7B%7D">Service Definition</a></h1>
-<div class="columns">
-  <div>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">import &quot;@typespec/http&quot;;
-import &quot;@typespec/openapi&quot;;
-
-using TypeSpec.Http;
-
-model Posts {
-  total: int32;
-  posts: Array&lt;{
-    id: int32;
-    title: string;
-    body: string;
-    published_at: utcDateTime | null;
-  }&gt;;
-}
-
-@service
-namespace BlogService {
-  @route(&quot;posts&quot;)
-  @get
-  op list(): Posts;
-}
-</code></pre>
-  </div>
-  <div>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">paths:</span>
-  <span class="hljs-string">/posts:</span>
-    <span class="hljs-attr">get:</span>
-      <span class="hljs-attr">operationId:</span> <span class="hljs-string">list</span>
-      <span class="hljs-attr">parameters:</span> []
-      <span class="hljs-attr">responses:</span>
-        <span class="hljs-attr">&quot;200&quot;:</span>
-          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
-          <span class="hljs-attr">content:</span>
-            <span class="hljs-attr">application/json:</span>
-              <span class="hljs-attr">schema:</span>
-                <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Posts&quot;</span>
-<span class="hljs-attr">components:</span>
-  <span class="hljs-attr">schemas:</span>
-    <span class="hljs-attr">Posts:</span>
-      <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
-      <span class="hljs-attr">required:</span>
-        <span class="hljs-bullet">-</span> <span class="hljs-string">total</span>
-        <span class="hljs-bullet">-</span> <span class="hljs-string">posts</span>
-      <span class="hljs-attr">properties:</span>
-        <span class="hljs-attr">total:</span>
-          <span class="hljs-attr">type:</span> <span class="hljs-string">integer</span>
-          <span class="hljs-attr">format:</span> <span class="hljs-string">int32</span>
-        <span class="hljs-attr">posts:</span>
-          <span class="hljs-attr">type:</span> <span class="hljs-string">array</span>
-          <span class="hljs-attr">items:</span>
-            <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
-            <span class="hljs-attr">properties:</span>
-              <span class="hljs-attr">id:</span>
-                <span class="hljs-attr">type:</span> <span class="hljs-string">integer</span>
-                <span class="hljs-attr">format:</span> <span class="hljs-string">int32</span>
-              <span class="hljs-attr">title:</span>
-                <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
-              <span class="hljs-attr">body:</span>
-                <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
-              <span class="hljs-attr">published_at:</span>
-                <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
-                <span class="hljs-attr">format:</span> <span class="hljs-string">date-time</span>
-                <span class="hljs-attr">nullable:</span> <span class="hljs-literal">true</span>
-            <span class="hljs-attr">required:</span>
-              <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
-              <span class="hljs-bullet">-</span> <span class="hljs-string">title</span>
-              <span class="hljs-bullet">-</span> <span class="hljs-string">body</span>
-              <span class="hljs-bullet">-</span> <span class="hljs-string">published_at</span>
-</code></pre>
-  </div>
-</div>
+<h1 id="youre-in-for-a-bad-time">You're in for a bad time ...</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="25" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -560,7 +589,7 @@ namespace BlogService {
   gap: 1rem;
 }
 ;">
-<h1 id="unlocking-the-power-of-typespec">Unlocking the Power of TypeSpec</h1>
+<h1 id="can-we-automate-this">Can we automate this?</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="26" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -573,34 +602,7 @@ namespace BlogService {
   gap: 1rem;
 }
 ;">
-<h1 id="string-aliases"><a href="https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvb3BlbmFwaSI7CtIcaHR0cCI7CgovLyDEC3M6Ly9qc29uLXNjaGVtYS5vcmcvdW5kZXJzdGFuZGluZy3LHi9yZWZlcmVuY2Uvc3RyaW5nI2J1aWx0LWluLWZvcm1hdHMKQMYJKCJ1dWlkIikKc2NhbGFyIFVVSUQgZXh0ZW5kcyDGPDsKyi1lbWFpbMouRcQP2y91cmnLW1JJ0ittb2RlbCBVc2VyIHsKICBpZDrlAIM7CiAgxWw6xmTEEHdlYnNpdGVfdXJpOsRNOwp95QEeVW5pb25zCmFsaWFzIEhUVFBTdWNjZXNzU3RhdHVzID0gMjAwIHwgMjAxO8slRmFpbHVyZcklNMUlNDAxxQYzxQY0xAYyMjsKCnVzaW5nIFR5cGVTcGVjLk9wZW5BUEk70BhIdHRw5AEAZXJyb3LnANxFxAzlAN1tZXNzYWdlOukA%2FuYAwFJlc3BvbnNlc8cx6wDDyBs8Q29kZekBPfEA5CwgVD7FYkBzxRDFLl86IMQI5AE6QGJvZHkgxAU6IFTFd8pq5wEI2mrtASnfZ8pn5QD2y2tPSzxUPiBp7QC9yXQyMDDkAMM7xyxDcmVhdGVk3TExzDFVbmF1dGhvcml6ZWTIM%2FAA2DQwMckwTm90Rm91btssND7kAcdzZXJ2aWNlCm5hbWVzcGFjZeUCqXNTxhfmAQtyb3V0ZSgidcQZL3tpZH0iKcQXZ2V0CiAgb3AgZmV0Y2go6ALYKTrkAQrERj4gfOoAiHztAMPkATc%3D&amp;e=%40typespec%2Fopenapi3&amp;options=%7B%7D">String Aliases</a></h1>
-<div class="columns">
-  <div>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">@format(&quot;uuid&quot;)
-scalar UUID extends string;
-
-@format(&quot;email&quot;)
-scalar Email extends string;
-
-@format(&quot;uri&quot;)
-scalar URI extends string;
-</code></pre>
-  </div>
-  <div>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">components:</span>
-  <span class="hljs-attr">schemas:</span>
-    <span class="hljs-attr">Email:</span>
-      <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
-      <span class="hljs-attr">format:</span> <span class="hljs-string">email</span>
-    <span class="hljs-attr">URI:</span>
-      <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
-      <span class="hljs-attr">format:</span> <span class="hljs-string">uri</span>
-    <span class="hljs-attr">UUID:</span>
-      <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
-      <span class="hljs-attr">format:</span> <span class="hljs-string">uuid</span>
-</code></pre>
-  </div>
-</div>
+<h1 id="tooling-in-ruby">Tooling in Ruby</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="27" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -613,35 +615,7 @@ scalar URI extends string;
   gap: 1rem;
 }
 ;">
-<h1 id="using-aliases"><a href="https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvb3BlbmFwaSI7CtIcaHR0cCI7CgovLyDEC3M6Ly9qc29uLXNjaGVtYS5vcmcvdW5kZXJzdGFuZGluZy3LHi9yZWZlcmVuY2Uvc3RyaW5nI2J1aWx0LWluLWZvcm1hdHMKQMYJKCJ1dWlkIikKc2NhbGFyIFVVSUQgZXh0ZW5kcyDGPDsKyi1lbWFpbMouRcQP2y91cmnLW1JJ0ittb2RlbCBVc2VyIHsKICBpZDrlAIM7CiAgxWw6xmTEEHdlYnNpdGVfdXJpOsRNOwp95QEeVW5pb25zCmFsaWFzIEhUVFBTdWNjZXNzU3RhdHVzID0gMjAwIHwgMjAxO8slRmFpbHVyZcklNMUlNDAxxQYzxQY0xAYyMjsKCnVzaW5nIFR5cGVTcGVjLk9wZW5BUEk70BhIdHRw5AEAZXJyb3LnANxFxAzlAN1tZXNzYWdlOukA%2FuYAwFJlc3BvbnNlc8cx6wDDyBs8Q29kZekBPfEA5CwgVD7FYkBzxRDFLl86IMQI5AE6QGJvZHkgxAU6IFTFd8pq5wEI2mrtASnfZ8pn5QD2y2tPSzxUPiBp7QC9yXQyMDDkAMM7xyxDcmVhdGVk3TExzDFVbmF1dGhvcml6ZWTIM%2FAA2DQwMckwTm90Rm91btssND7kAcdzZXJ2aWNlCm5hbWVzcGFjZeUCqXNTxhfmAQtyb3V0ZSgidcQZL3tpZH0iKcQXZ2V0CiAgb3AgZmV0Y2go6ALYKTrkAQrERj4gfOoAiHztAMPkATc%3D&amp;e=%40typespec%2Fopenapi3&amp;options=%7B%7D">Using Aliases</a></h1>
-<div class="columns">
-  <div>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">model User {
-  id: UUID;
-  email: Email;
-  website_uri: URI;
-}
-</code></pre>
-  </div>
-  <div>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">components:</span>
-  <span class="hljs-attr">schemas:</span>
-    <span class="hljs-attr">User:</span>
-      <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
-      <span class="hljs-attr">required:</span>
-        <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
-        <span class="hljs-bullet">-</span> <span class="hljs-string">email</span>
-        <span class="hljs-bullet">-</span> <span class="hljs-string">website_uri</span>
-      <span class="hljs-attr">properties:</span>
-        <span class="hljs-attr">id:</span>
-          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/UUID&quot;</span>
-        <span class="hljs-attr">email:</span>
-          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Email&quot;</span>
-        <span class="hljs-attr">website_uri:</span>
-          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/URI&quot;</span>
-</code></pre>
-  </div>
-</div>
+<h1 id="code-first">Code-First</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="28" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -654,10 +628,60 @@ scalar URI extends string;
   gap: 1rem;
 }
 ;">
-<h1 id="union-types">Union Types</h1>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">alias HTTPSuccessStatus = 200 | 201;
-alias HTTPFailureStatus = 400 | 401 | 403 | 404 | 422;
+<h1 id="swagger_blocks"><a href="https://github.com/fotinakis/swagger-blocks">swagger_blocks</a></h1>
+<div class="columns">
+  <div>
+<ul>
+<li>
+<p>Code-first approach to defining a schema <img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/2705.svg" data-marp-twemoji=""/></p>
+</li>
+<li>
+<p>Requires knowledge of OpenAPI syntax <img class="emoji" draggable="false" alt="❌" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/274c.svg" data-marp-twemoji=""/></p>
+</li>
+<li>
+<p>Object re-use is not obvious <img class="emoji" draggable="false" alt="🤷🏻‍♂️" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/1f937-1f3fb-200d-2642-fe0f.svg" data-marp-twemoji=""/></p>
+</div>
+<div>
+</li>
+</ul>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-ruby"><span class="hljs-keyword">class</span> <span class="hljs-title class_">PetsController</span> &lt; <span class="hljs-title class_ inherited__">ActionController::Base</span>
+  <span class="hljs-keyword">include</span> <span class="hljs-title class_">Swagger::Blocks</span>
+
+  swagger_path <span class="hljs-string">&#x27;/pets/{id}&#x27;</span> <span class="hljs-keyword">do</span>
+    operation <span class="hljs-symbol">:get</span> <span class="hljs-keyword">do</span>
+      key <span class="hljs-symbol">:summary</span>, <span class="hljs-string">&#x27;Find Pet by ID&#x27;</span>
+      key <span class="hljs-symbol">:description</span>, <span class="hljs-string">&#x27;Returns a single pet if the user has access&#x27;</span>
+      key <span class="hljs-symbol">:operationId</span>, <span class="hljs-string">&#x27;findPetById&#x27;</span>
+      key <span class="hljs-symbol">:tags</span>, [
+        <span class="hljs-string">&#x27;pet&#x27;</span>
+      ]
+      parameter <span class="hljs-keyword">do</span>
+        key <span class="hljs-symbol">:name</span>, <span class="hljs-symbol">:id</span>
+        key <span class="hljs-symbol">:in</span>, <span class="hljs-symbol">:path</span>
+        key <span class="hljs-symbol">:description</span>, <span class="hljs-string">&#x27;ID of pet to fetch&#x27;</span>
+        key <span class="hljs-symbol">:required</span>, <span class="hljs-literal">true</span>
+        key <span class="hljs-symbol">:type</span>, <span class="hljs-symbol">:integer</span>
+        key <span class="hljs-symbol">:format</span>, <span class="hljs-symbol">:int64</span>
+      <span class="hljs-keyword">end</span>
+      response <span class="hljs-number">200</span> <span class="hljs-keyword">do</span>
+        key <span class="hljs-symbol">:description</span>, <span class="hljs-string">&#x27;pet response&#x27;</span>
+        schema <span class="hljs-keyword">do</span>
+          key <span class="hljs-symbol">:<span class="hljs-string">&#x27;$ref&#x27;</span></span>, <span class="hljs-symbol">:Pet</span>
+        <span class="hljs-keyword">end</span>
+      <span class="hljs-keyword">end</span>
+      response <span class="hljs-symbol">:default</span> <span class="hljs-keyword">do</span>
+        key <span class="hljs-symbol">:description</span>, <span class="hljs-string">&#x27;unexpected error&#x27;</span>
+        schema <span class="hljs-keyword">do</span>
+          key <span class="hljs-symbol">:<span class="hljs-string">&#x27;$ref&#x27;</span></span>, <span class="hljs-symbol">:ErrorModel</span>
+        <span class="hljs-keyword">end</span>
+      <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+  <span class="hljs-keyword">end</span>
+  <span class="hljs-comment"># ...</span>
+<span class="hljs-keyword">end</span>
 </code></pre>
+  </div>
+</div>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="29" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -670,71 +694,53 @@ alias HTTPFailureStatus = 400 | 401 | 403 | 404 | 422;
   gap: 1rem;
 }
 ;">
-<h1 id="custom-error-responses"><a href="https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvb3BlbmFwaSI7CtIcaHR0cCI7CgovLyDEC3M6Ly9qc29uLXNjaGVtYS5vcmcvdW5kZXJzdGFuZGluZy3LHi9yZWZlcmVuY2Uvc3RyaW5nI2J1aWx0LWluLWZvcm1hdHMKQMYJKCJ1dWlkIikKc2NhbGFyIFVVSUQgZXh0ZW5kcyDGPDsKyi1lbWFpbMouRcQP2y91cmnLW1JJ0ittb2RlbCBVc2VyIHsKICBpZDrlAIM7CiAgxWw6xmTEEHdlYnNpdGVfdXJpOsRNOwp95QEeVW5pb25zCmFsaWFzIEhUVFBTdWNjZXNzU3RhdHVzID0gMjAwIHwgMjAxO8slRmFpbHVyZcklNMUlNDAxxQYzxQY0xAYyMjsKCnVzaW5nIFR5cGVTcGVjLk9wZW5BUEk70BhIdHRw5AEAZXJyb3LnANxFxAzlAN1tZXNzYWdlOukA%2FuYAwFJlc3BvbnNlc8cx6wDDyBs8Q29kZekBPfEA5CwgVD7FYkBzxRDFLl86IMQI5AE6QGJvZHkgxAU6IFTFd8pq5wEI2mrtASnfZ8pn5QD2y2tPSzxUPiBp7QC9yXQyMDDkAMM7xyxDcmVhdGVk3TExzDFVbmF1dGhvcml6ZWTIM%2FAA2DQwMckwTm90Rm91btssND7kAcdzZXJ2aWNlCm5hbWVzcGFjZeUCqXNTxhfmAQtyb3V0ZSgidcQZL3tpZH0iKcQXZ2V0CiAgb3AgZmV0Y2go6ALYKTrkAQrERj4gfOoAiHztAMPkATc%3D&amp;e=%40typespec%2Fopenapi3&amp;options=%7B%7D">Custom Error Responses</a></h1>
+<h1 id="grape-swagger"><a href="https://github.com/ruby-grape/grape-swagger">grape-swagger</a></h1>
 <div class="columns">
   <div>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">using TypeSpec.OpenAPI;
-using TypeSpec.Http;
+<ul>
+<li>
+<p>Hides complexity of OpenAPI spec <img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/2705.svg" data-marp-twemoji=""/></p>
+</li>
+<li>
+<p>Only supports OpenAPI version 2.0 <img class="emoji" draggable="false" alt="❌" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/274c.svg" data-marp-twemoji=""/></p>
+</li>
+<li>
+<p>Requires additional dependencies <img class="emoji" draggable="false" alt="🤷🏻‍♂️" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/1f937-1f3fb-200d-2642-fe0f.svg" data-marp-twemoji=""/></p>
+</li>
+<li>
+<p>Difficult to integrate with existing Rails app <img class="emoji" draggable="false" alt="❌" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/274c.svg" data-marp-twemoji=""/></p>
+</div>
+<div>
+</li>
+</ul>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-ruby"><span class="hljs-keyword">module</span> <span class="hljs-variable constant_">API</span>
+  <span class="hljs-keyword">module</span> <span class="hljs-title class_">Entities</span>
+    <span class="hljs-keyword">class</span> <span class="hljs-title class_">Horse</span> &lt; <span class="hljs-title class_ inherited__">Grape::Entity</span>
+      <span class="hljs-keyword">include</span> <span class="hljs-variable constant_">API</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Entities</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Defaults</span>
 
-@error
-model Error {
-  message: string;
-}
+      expose <span class="hljs-symbol">:size</span>, <span class="hljs-symbol">documentation:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-title class_">Integer</span> }
+      expose <span class="hljs-symbol">:age</span>, <span class="hljs-symbol">documentation:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-title class_">Integer</span> }
+      expose <span class="hljs-symbol">:gender</span>, <span class="hljs-symbol">documentation:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-title class_">Integer</span> }
+      expose <span class="hljs-symbol">:hussar</span>, <span class="hljs-symbol">using:</span> <span class="hljs-title class_">Entities</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Base</span>, <span class="hljs-symbol">documentation:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-title class_">Integer</span>, <span class="hljs-symbol">desc:</span> <span class="hljs-string">&#x27;Identity of associated Hussar&#x27;</span> }
+    <span class="hljs-keyword">end</span>
 
-// Responses
-model HTTPSuccessResponse&lt;Code extends HTTPSuccessStatus, T&gt; {
-  @statusCode _: Code;
-  @body body: T;
-}
+    <span class="hljs-keyword">class</span> <span class="hljs-title class_">Hussar</span> &lt; <span class="hljs-title class_ inherited__">Grape::Entity</span>
+      format_with(<span class="hljs-symbol">:iso_timestamp</span>) { |<span class="hljs-params">dt</span>| dt.iso8601 }
+      with_options(<span class="hljs-symbol">format_with:</span> <span class="hljs-symbol">:iso_timestamp</span>) <span class="hljs-keyword">do</span>
+        expose <span class="hljs-symbol">:created_at</span>
+        expose <span class="hljs-symbol">:updated_at</span>
+      <span class="hljs-keyword">end</span>
 
-model HTTPFailureResponse&lt;Code extends HTTPFailureStatus&gt; {
-  @statusCode _: Code;
-  @body body: Error;
-}
+      <span class="hljs-keyword">include</span> <span class="hljs-variable constant_">API</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Entities</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Defaults</span>
 
-model OK&lt;T&gt; is HTTPSuccessResponse&lt;200, T&gt;;
-model Created&lt;T&gt; is HTTPSuccessResponse&lt;201, T&gt;;
-model Unauthorized is HTTPFailureResponse&lt;401&gt;;
-model NotFound is HTTPFailureResponse&lt;404&gt;;
-
-@service
-namespace UsersService {
-  @route(&quot;users/{id}&quot;)
-  @get
-  op fetch(id: UUID): OK&lt;User&gt; | NotFound | Unauthorized;
-}
-</code></pre>
-  </div>
-  <div>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">paths:</span>
-  <span class="hljs-string">/users/{id}:</span>
-    <span class="hljs-attr">get:</span>
-      <span class="hljs-attr">operationId:</span> <span class="hljs-string">fetch</span>
-      <span class="hljs-attr">parameters:</span>
-        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">id</span>
-          <span class="hljs-attr">in:</span> <span class="hljs-string">path</span>
-          <span class="hljs-attr">required:</span> <span class="hljs-literal">true</span>
-          <span class="hljs-attr">schema:</span>
-            <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/UUID&quot;</span>
-      <span class="hljs-attr">responses:</span>
-        <span class="hljs-attr">&quot;200&quot;:</span>
-          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
-          <span class="hljs-attr">content:</span>
-            <span class="hljs-attr">application/json:</span>
-              <span class="hljs-attr">schema:</span>
-                <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/User&quot;</span>
-        <span class="hljs-attr">&quot;401&quot;:</span>
-          <span class="hljs-attr">description:</span> <span class="hljs-string">Access</span> <span class="hljs-string">is</span> <span class="hljs-string">unauthorized.</span>
-          <span class="hljs-attr">content:</span>
-            <span class="hljs-attr">application/json:</span>
-              <span class="hljs-attr">schema:</span>
-                <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Error&quot;</span>
-        <span class="hljs-attr">&quot;404&quot;:</span>
-          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">server</span> <span class="hljs-string">cannot</span> <span class="hljs-string">find</span> <span class="hljs-string">the</span> <span class="hljs-string">requested</span> <span class="hljs-string">resource.</span>
-          <span class="hljs-attr">content:</span>
-            <span class="hljs-attr">application/json:</span>
-              <span class="hljs-attr">schema:</span>
-                <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Error&quot;</span>
+      expose <span class="hljs-symbol">:born</span>, <span class="hljs-symbol">documentation:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-title class_">String</span>, <span class="hljs-symbol">desc:</span> <span class="hljs-string">&#x27;Birthday of Hussar&#x27;</span> }
+      expose <span class="hljs-symbol">:size</span>, <span class="hljs-symbol">documentation:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-title class_">Integer</span> }
+      expose <span class="hljs-symbol">:age</span>, <span class="hljs-symbol">documentation:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-title class_">Integer</span> }
+      expose <span class="hljs-symbol">:gender</span>, <span class="hljs-symbol">documentation:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-title class_">Integer</span> }
+      expose <span class="hljs-symbol">:horses</span>, <span class="hljs-symbol">using:</span> <span class="hljs-title class_">Entities</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Base</span>, <span class="hljs-symbol">documentation:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-title class_">Array</span>, <span class="hljs-symbol">desc:</span> <span class="hljs-string">&#x27;Horses of Hussar&#x27;</span>, <span class="hljs-symbol">is_array:</span> <span class="hljs-literal">true</span> }
+    <span class="hljs-keyword">end</span>
+  <span class="hljs-keyword">end</span>
+<span class="hljs-keyword">end</span>
 </code></pre>
   </div>
 </div>
@@ -750,7 +756,7 @@ namespace UsersService {
   gap: 1rem;
 }
 ;">
-<h1 id="putting-it-all-together"><a href="https://github.com/reagent/blog-openapi">Putting it All Together</a></h1>
+<h1 id="spec-first">Spec-First</h1>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="31" data-theme="uncover" data-style=".columns {
   display: grid;
@@ -763,17 +769,690 @@ namespace UsersService {
   gap: 1rem;
 }
 ;">
-<h1 id="additional-resources">Additional Resources</h1>
+<h1 id="rswag"><a href="https://github.com/rswag/rswag">rswag</a></h1>
+<div class="columns">
+  <div>
 <ul>
-<li><a href="https://typespec.io/playground">TypeSpec Playground</a>
-<ul>
-<li><a href="https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvaHR0cCI7CtIZb3BlbmFwaSI7Cgp1c2luZyBUeXBlU3BlYy5IdHRwOwoKbW9kZWwgUG9zdHMgewogIHRvdGFsOiBpbnQzMjsKICBwxBo6IEFycmF5PMQhICBpZMsgICB0aXRsZTogc3RyaW5nxhNib2R5zhJwdWJsaXNoZWRfYXQ6IHV0Y0RhdGVUaW1lIHwgbnVsbMQmfT47Cn0KCkBzZXJ2aWNlCm5hbWVzcGFjZSBCbG9nU8YW5QClQHJvdXRlKCLlAJ0iKcQSZ2V0CiAgb3AgbGlzdCgpOuYA0zsKfQ%3D%3D&amp;e=%40typespec%2Fopenapi3&amp;options=%7B%7D">Blog service example</a></li>
-<li><a href="https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvb3BlbmFwaSI7CtIcaHR0cCI7CgovLyDEC3M6Ly9qc29uLXNjaGVtYS5vcmcvdW5kZXJzdGFuZGluZy3LHi9yZWZlcmVuY2Uvc3RyaW5nI2J1aWx0LWluLWZvcm1hdHMKQMYJKCJ1dWlkIikKc2NhbGFyIFVVSUQgZXh0ZW5kcyDGPDsKyi1lbWFpbMouRcQP2y91cmnLW1JJ0ittb2RlbCBVc2VyIHsKICBpZDrlAIM7CiAgxWw6xmTEEHdlYnNpdGVfdXJpOsRNOwp95QEeVW5pb25zCmFsaWFzIEhUVFBTdWNjZXNzU3RhdHVzID0gMjAwIHwgMjAxO8slRmFpbHVyZcklNMUlNDAxxQYzxQY0xAYyMjsKCnVzaW5nIFR5cGVTcGVjLk9wZW5BUEk70BhIdHRw5AEAZXJyb3LnANxFxAzlAN1tZXNzYWdlOukA%2FuYAwFJlc3BvbnNlc8cx6wDDyBs8Q29kZekBPfEA5CwgVD7FYkBzxRDFLl86IMQI5AE6QGJvZHkgxAU6IFTFd8pq5wEI2mrtASnfZ8pn5QD2y2tPSzxUPiBp7QC9yXQyMDDkAMM7xyxDcmVhdGVk3TExzDFVbmF1dGhvcml6ZWTIM%2FAA2DQwMckwTm90Rm91btssND7kAcdzZXJ2aWNlCm5hbWVzcGFjZeUCqXNTxhfmAQtyb3V0ZSgidcQZL3tpZH0iKcQXZ2V0CiAgb3AgZmV0Y2go6ALYKTrkAQrERj4gfOoAiHztAMPkATc%3D&amp;e=%40typespec%2Fopenapi3&amp;options=%7B%7D">Service with failure modes</a></li>
-</ul>
+<li>
+<p>Most popular library for generating OpenAPI for Ruby <img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/2705.svg" data-marp-twemoji=""/></p>
 </li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi">OpenAPI (Swagger) Editor</a> - VSCode Plugin</li>
-<li><a href="https://typespec.io/docs/getting-started/typespec-for-openapi-dev#additionalproperties"><code>additionalProperties</code> support in TypeSpec</a></li>
-<li><a href="https://github.com/microsoft/typespec/issues/2700"><code>@jsonExample</code> decorator support</a></li>
+<li>
+<p>Requires understanding OpenAPI syntax <img class="emoji" draggable="false" alt="❌" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/274c.svg" data-marp-twemoji=""/></p>
+</li>
+<li>
+<p>Requires the use of RSpec <img class="emoji" draggable="false" alt="🤷🏻‍♂️" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/1f937-1f3fb-200d-2642-fe0f.svg" data-marp-twemoji=""/></p>
+</div>
+<div>
+</li>
+</ul>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-ruby"><span class="hljs-comment"># spec/requests/blogs_spec.rb</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">&#x27;swagger_helper&#x27;</span>
+
+describe <span class="hljs-string">&#x27;Blogs API&#x27;</span> <span class="hljs-keyword">do</span>
+
+  path <span class="hljs-string">&#x27;/blogs&#x27;</span> <span class="hljs-keyword">do</span>
+
+    post <span class="hljs-string">&#x27;Creates a blog&#x27;</span> <span class="hljs-keyword">do</span>
+      tags <span class="hljs-string">&#x27;Blogs&#x27;</span>
+      consumes <span class="hljs-string">&#x27;application/json&#x27;</span>
+      parameter <span class="hljs-symbol">name:</span> <span class="hljs-symbol">:blog</span>, <span class="hljs-symbol">in:</span> <span class="hljs-symbol">:body</span>, <span class="hljs-symbol">schema:</span> {
+        <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:object</span>,
+        <span class="hljs-symbol">properties:</span> {
+          <span class="hljs-symbol">title:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:string</span> },
+          <span class="hljs-symbol">content:</span> { <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:string</span> }
+        },
+        <span class="hljs-symbol">required:</span> [ <span class="hljs-string">&#x27;title&#x27;</span>, <span class="hljs-string">&#x27;content&#x27;</span> ]
+      }
+
+      response <span class="hljs-string">&#x27;201&#x27;</span>, <span class="hljs-string">&#x27;blog created&#x27;</span> <span class="hljs-keyword">do</span>
+        let(<span class="hljs-symbol">:blog</span>) { { <span class="hljs-symbol">title:</span> <span class="hljs-string">&#x27;foo&#x27;</span>, <span class="hljs-symbol">content:</span> <span class="hljs-string">&#x27;bar&#x27;</span> } }
+        run_test!
+      <span class="hljs-keyword">end</span>
+
+      response <span class="hljs-string">&#x27;422&#x27;</span>, <span class="hljs-string">&#x27;invalid request&#x27;</span> <span class="hljs-keyword">do</span>
+        let(<span class="hljs-symbol">:blog</span>) { { <span class="hljs-symbol">title:</span> <span class="hljs-string">&#x27;foo&#x27;</span> } }
+        run_test!
+      <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+  <span class="hljs-keyword">end</span>
+
+  <span class="hljs-comment"># ...</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="32" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="rspec-openapi"><a href="https://github.com/exoego/rspec-openapi">rspec-openapi</a></h1>
+<div class="columns">
+  <div>
+<ul>
+<li>Doesn't require additional spec configuration <img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/2705.svg" data-marp-twemoji=""/></li>
+<li>Supports latest OpenAPI version (3.x) <img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/2705.svg" data-marp-twemoji=""/></li>
+<li>Must be using RSpec (minitest support is experimental) <img class="emoji" draggable="false" alt="🤷🏻‍♂️" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/1f937-1f3fb-200d-2642-fe0f.svg" data-marp-twemoji=""/></li>
+<li>May not capture all responses <img class="emoji" draggable="false" alt="❌" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/274c.svg" data-marp-twemoji=""/></li>
+</ul>
+</div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-ruby"><span class="hljs-title class_">RSpec</span>.describe <span class="hljs-string">&#x27;Tables&#x27;</span>, <span class="hljs-symbol">type:</span> <span class="hljs-symbol">:request</span> <span class="hljs-keyword">do</span>
+  describe <span class="hljs-string">&#x27;#index&#x27;</span> <span class="hljs-keyword">do</span>
+    it <span class="hljs-string">&#x27;returns a list of tables&#x27;</span> <span class="hljs-keyword">do</span>
+      get <span class="hljs-string">&#x27;/tables&#x27;</span>, <span class="hljs-symbol">params:</span> { <span class="hljs-symbol">page:</span> <span class="hljs-string">&#x27;1&#x27;</span>, <span class="hljs-symbol">per:</span> <span class="hljs-string">&#x27;10&#x27;</span> }, <span class="hljs-symbol">headers:</span> { <span class="hljs-symbol">authorization:</span> <span class="hljs-string">&#x27;k0kubun&#x27;</span> }
+      expect(response.status).to eq(<span class="hljs-number">200</span>)
+    <span class="hljs-keyword">end</span>
+
+    it <span class="hljs-string">&#x27;does not return tables if unauthorized&#x27;</span> <span class="hljs-keyword">do</span>
+      get <span class="hljs-string">&#x27;/tables&#x27;</span>
+      expect(response.status).to eq(<span class="hljs-number">401</span>)
+    <span class="hljs-keyword">end</span>
+  <span class="hljs-keyword">end</span>
+
+  <span class="hljs-comment"># ...</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="33" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="what-would-a-sane-spec-first-approach-look-like">What would a sane spec-first approach look like?</h1>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;" data-marpit-advanced-background="background"><div data-marpit-advanced-background-container="true" data-marpit-advanced-background-direction="horizontal"><figure style="background-image:url(&quot;./assets/typespec-homepage.png&quot;);"></figure></div></section></foreignObject><foreignObject width="1280" height="720"><section id="34" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;" data-marpit-advanced-background="content"></section>
+</foreignObject><foreignObject width="1280" height="720" data-marpit-advanced-background="pseudo"><section data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="" data-marpit-advanced-background="pseudo"></section></foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="35" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="typespec">TypeSpec</h1>
+<ul>
+<li>Began life as <a href="https://www.infoworld.com/article/3683909/introducing-cadl-microsofts-concise-api-design-language.html">CADL</a> (Concise API Design Language)</li>
+<li>Transpiled language with multiple emitters (targets)</li>
+<li>TypeSpec is to API specs as TypeScript is to JavaScript</li>
+</ul>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="36" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="what-can-it-do">What can it do?</h1>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="37" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="try-it-out"><a href="https://github.com/reagent/typespec-presentation/playground">Try it Out</a></h1>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="38" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="recap">Recap</h1>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="39" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="models">Models</h1>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">model User {
+  id: int32;
+  email: string;
+  name?: string;
+}
+
+model Post {
+  id: string;
+  title: string;
+  body: string;
+  published_at?: utcDateTime;
+  author: User;
+}
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">schemas:</span>
+  <span class="hljs-attr">Post:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+    <span class="hljs-attr">required:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">title</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">body</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">author</span>
+    <span class="hljs-attr">properties:</span>
+      <span class="hljs-attr">id:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">title:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">body:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">published_at:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+        <span class="hljs-attr">format:</span> <span class="hljs-string">date-time</span>
+      <span class="hljs-attr">author:</span>
+        <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/User&quot;</span>
+  <span class="hljs-attr">User:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+    <span class="hljs-attr">required:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">email</span>
+    <span class="hljs-attr">properties:</span>
+      <span class="hljs-attr">id:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">integer</span>
+        <span class="hljs-attr">format:</span> <span class="hljs-string">int32</span>
+      <span class="hljs-attr">email:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">name:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="40" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="aliases">Aliases</h1>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">@format(&quot;uuid&quot;)
+scalar uuid extends string;
+
+@format(&quot;email&quot;)
+scalar email extends string;
+
+@format(&quot;uri&quot;)
+scalar uri extends string;
+
+scalar id extends int32;
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">schemas:</span>
+  <span class="hljs-attr">email:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+    <span class="hljs-attr">format:</span> <span class="hljs-string">email</span>
+  <span class="hljs-attr">id:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">integer</span>
+    <span class="hljs-attr">format:</span> <span class="hljs-string">int32</span>
+  <span class="hljs-attr">uri:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+    <span class="hljs-attr">format:</span> <span class="hljs-string">uri</span>
+  <span class="hljs-attr">uuid:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+    <span class="hljs-attr">format:</span> <span class="hljs-string">uuid</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="41" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="operations">Operations</h1>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">import &quot;@typespec/http&quot;;
+
+using TypeSpec.Http;
+
+model User {
+  id: string;
+}
+
+@route(&quot;users&quot;)
+op list(): Array&lt;User&gt;;
+
+@route(&quot;users/{id}&quot;)
+op fetch(id: string): User;
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">paths:</span>
+  <span class="hljs-string">/users:</span>
+    <span class="hljs-attr">get:</span>
+      <span class="hljs-attr">operationId:</span> <span class="hljs-string">list</span>
+      <span class="hljs-attr">parameters:</span> []
+      <span class="hljs-attr">responses:</span>
+        <span class="hljs-attr">&quot;200&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-attr">type:</span> <span class="hljs-string">array</span>
+                <span class="hljs-attr">items:</span>
+                  <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/User&quot;</span>
+  <span class="hljs-string">/users/{id}:</span>
+    <span class="hljs-attr">get:</span>
+      <span class="hljs-attr">operationId:</span> <span class="hljs-string">fetch</span>
+      <span class="hljs-attr">parameters:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">id</span>
+          <span class="hljs-attr">in:</span> <span class="hljs-string">path</span>
+          <span class="hljs-attr">required:</span> <span class="hljs-literal">true</span>
+          <span class="hljs-attr">schema:</span>
+            <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">responses:</span>
+        <span class="hljs-attr">&quot;200&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/User&quot;</span>
+<span class="hljs-attr">components:</span>
+  <span class="hljs-attr">schemas:</span>
+    <span class="hljs-attr">User:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+      <span class="hljs-attr">required:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
+      <span class="hljs-attr">properties:</span>
+        <span class="hljs-attr">id:</span>
+          <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="42" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="generics">Generics</h1>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">model User {
+  id: int32;
+}
+
+model CollectionResponse&lt;T&gt; {
+  total: int32;
+  resources: Array&lt;T&gt;;
+}
+
+model Users is CollectionResponse&lt;User&gt;;
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">schemas:</span>
+  <span class="hljs-attr">User:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+    <span class="hljs-attr">required:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
+    <span class="hljs-attr">properties:</span>
+      <span class="hljs-attr">id:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">integer</span>
+        <span class="hljs-attr">format:</span> <span class="hljs-string">int32</span>
+  <span class="hljs-attr">Users:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+    <span class="hljs-attr">required:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">total</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">resources</span>
+    <span class="hljs-attr">properties:</span>
+      <span class="hljs-attr">total:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">integer</span>
+        <span class="hljs-attr">format:</span> <span class="hljs-string">int32</span>
+      <span class="hljs-attr">resources:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">array</span>
+        <span class="hljs-attr">items:</span>
+          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/User&quot;</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="43" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="union-types">Union Types</h1>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">import &quot;@typespec/http&quot;;
+
+using TypeSpec.Http;
+
+model User {
+  id: int32;
+}
+
+alias HTTPSuccessStatus = 200 | 201 | 301 | 302;
+alias HTTPErrorStatus = 400 | 401 | 403 | 404 | 422 | 500 /* ... */;
+alias StatusCode = HTTPSuccessStatus | HTTPErrorStatus;
+
+model SuccessResponse&lt;Status extends HTTPSuccessStatus, B&gt; {
+  @statusCode _: Status;
+  @body body: B;
+}
+
+model ErrorResponse&lt;Status extends HTTPErrorStatus&gt; {
+  @statusCode _: Status;
+  @body body: {
+    message: string;
+  };
+}
+
+op list(): SuccessResponse&lt;
+  200,
+  Array&lt;User&gt;
+&gt; | ErrorResponse&lt;401&gt; | ErrorResponse&lt;500&gt;;
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">paths:</span>
+  <span class="hljs-string">/:</span>
+    <span class="hljs-attr">get:</span>
+      <span class="hljs-attr">operationId:</span> <span class="hljs-string">list</span>
+      <span class="hljs-attr">parameters:</span> []
+      <span class="hljs-attr">responses:</span>
+        <span class="hljs-attr">&quot;200&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-attr">type:</span> <span class="hljs-string">array</span>
+                <span class="hljs-attr">items:</span>
+                  <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/User&quot;</span>
+        <span class="hljs-attr">&quot;401&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">Access</span> <span class="hljs-string">is</span> <span class="hljs-string">unauthorized.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+                <span class="hljs-attr">properties:</span>
+                  <span class="hljs-attr">message:</span>
+                    <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+                <span class="hljs-attr">required:</span>
+                  <span class="hljs-bullet">-</span> <span class="hljs-string">message</span>
+        <span class="hljs-attr">&quot;500&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">Server</span> <span class="hljs-string">error</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+                <span class="hljs-attr">properties:</span>
+                  <span class="hljs-attr">message:</span>
+                    <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+                <span class="hljs-attr">required:</span>
+                  <span class="hljs-bullet">-</span> <span class="hljs-string">message</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="44" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="intersection-types">Intersection Types</h1>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">model Person {
+  id: int32;
+}
+
+model Name {
+  name: string;
+}
+
+alias PersonWithName = Person &amp; Name;
+
+@route(&quot;named&quot;)
+op named(): PersonWithName;
+
+@route(&quot;nameless&quot;)
+op nameless(): Person;
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">paths:</span>
+  <span class="hljs-string">/named:</span>
+    <span class="hljs-attr">get:</span>
+      <span class="hljs-attr">operationId:</span> <span class="hljs-string">named</span>
+      <span class="hljs-attr">parameters:</span> []
+      <span class="hljs-attr">responses:</span>
+        <span class="hljs-attr">&quot;200&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+                <span class="hljs-attr">properties:</span>
+                  <span class="hljs-attr">id:</span>
+                    <span class="hljs-attr">type:</span> <span class="hljs-string">integer</span>
+                    <span class="hljs-attr">format:</span> <span class="hljs-string">int32</span>
+                  <span class="hljs-attr">name:</span>
+                    <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+                <span class="hljs-attr">required:</span>
+                  <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
+                  <span class="hljs-bullet">-</span> <span class="hljs-string">name</span>
+  <span class="hljs-string">/nameless:</span>
+    <span class="hljs-attr">get:</span>
+      <span class="hljs-attr">operationId:</span> <span class="hljs-string">nameless</span>
+      <span class="hljs-attr">parameters:</span> []
+      <span class="hljs-attr">responses:</span>
+        <span class="hljs-attr">&quot;200&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Person&quot;</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="45" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="transitioning-existing-specs">Transitioning Existing Specs</h1>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="46" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="ref-is-your-friend"><code>$ref</code> is Your Friend</h1>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-comment"># legacy.yml</span>
+
+<span class="hljs-attr">paths:</span>
+  <span class="hljs-string">/posts/{id}:</span>
+    <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;./generated.yaml#/paths/~1posts~1%7Bid%7D&quot;</span>
+<span class="hljs-attr">components:</span>
+  <span class="hljs-attr">schemas:</span>
+    <span class="hljs-attr">User:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+      <span class="hljs-attr">required:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">posts</span>
+      <span class="hljs-attr">properties:</span>
+        <span class="hljs-attr">id:</span>
+          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/uuid&quot;</span>
+        <span class="hljs-attr">posts:</span>
+          <span class="hljs-attr">type:</span> <span class="hljs-string">array</span>
+          <span class="hljs-attr">items:</span>
+            <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;./generated.yaml#/components/schemas/Post&quot;</span>
+    <span class="hljs-attr">uuid:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">format:</span> <span class="hljs-string">uuid</span>
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-comment"># generated.yaml</span>
+
+<span class="hljs-attr">paths:</span>
+  <span class="hljs-string">/posts/{id}:</span>
+    <span class="hljs-attr">get:</span>
+      <span class="hljs-attr">operationId:</span> <span class="hljs-string">fetch</span>
+      <span class="hljs-attr">parameters:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">id</span>
+          <span class="hljs-attr">in:</span> <span class="hljs-string">path</span>
+          <span class="hljs-attr">required:</span> <span class="hljs-literal">true</span>
+          <span class="hljs-attr">schema:</span>
+            <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/uuid&quot;</span>
+      <span class="hljs-attr">responses:</span>
+        <span class="hljs-attr">&quot;200&quot;:</span>
+          <span class="hljs-attr">description:</span> <span class="hljs-string">The</span> <span class="hljs-string">request</span> <span class="hljs-string">has</span> <span class="hljs-string">succeeded.</span>
+          <span class="hljs-attr">content:</span>
+            <span class="hljs-attr">application/json:</span>
+              <span class="hljs-attr">schema:</span>
+                <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/Post&quot;</span>
+<span class="hljs-attr">components:</span>
+  <span class="hljs-attr">schemas:</span>
+    <span class="hljs-attr">Post:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+      <span class="hljs-attr">required:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">id</span>
+      <span class="hljs-attr">properties:</span>
+        <span class="hljs-attr">id:</span>
+          <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/uuid&quot;</span>
+    <span class="hljs-attr">uuid:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">format:</span> <span class="hljs-string">uuid</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="47" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
+<h1 id="additional-links">Additional Links</h1>
+<ul>
+<li><a href="https://typespec.io/docs">Documentation</a></li>
+<li><a href="https://typespec.io/playground">Typespec Playground</a></li>
+<li><a href="https://github.com/reagent/blog-openapi">TSP + Rails Integration</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi">OpenAPI Editor</a></li>
 </ul>
 </section>
 <script>!function(){"use strict";const t={h1:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"1"},style:"display: block; font-size: 2em; margin-block-start: 0.67em; margin-block-end: 0.67em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h2:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"2"},style:"display: block; font-size: 1.5em; margin-block-start: 0.83em; margin-block-end: 0.83em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h3:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"3"},style:"display: block; font-size: 1.17em; margin-block-start: 1em; margin-block-end: 1em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h4:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"4"},style:"display: block; margin-block-start: 1.33em; margin-block-end: 1.33em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h5:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"5"},style:"display: block; font-size: 0.83em; margin-block-start: 1.67em; margin-block-end: 1.67em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h6:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"6"},style:"display: block; font-size: 0.67em; margin-block-start: 2.33em; margin-block-end: 2.33em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},span:{proto:()=>HTMLSpanElement},pre:{proto:()=>HTMLElement,style:"display: block; font-family: monospace; white-space: pre; margin: 1em 0; --marp-auto-scaling-white-space: pre;"}},e="data-marp-auto-scaling-wrapper",i="data-marp-auto-scaling-svg",n="data-marp-auto-scaling-container";class s extends HTMLElement{constructor(){super(),this.svgPreserveAspectRatio="xMinYMid meet";const t=t=>([e])=>{const{width:i,height:n}=e.contentRect;this[t]={width:i,height:n},this.updateSVGRect()};this.attachShadow({mode:"open"}),this.containerObserver=new ResizeObserver(t("containerSize")),this.wrapperObserver=new ResizeObserver(((...e)=>{t("wrapperSize")(...e),this.flushSvgDisplay()}))}static get observedAttributes(){return["data-downscale-only"]}connectedCallback(){var t,s,o,r,a;this.shadowRoot.innerHTML=`\n<style>\n  svg[${i}] { display: block; width: 100%; height: auto; vertical-align: top; }\n  span[${n}] { display: table; white-space: var(--marp-auto-scaling-white-space, nowrap); width: max-content; }\n</style>\n<div ${e}>\n  <svg part="svg" ${i}>\n    <foreignObject><span ${n}><slot></slot></span></foreignObject>\n  </svg>\n</div>\n    `.split(/\n\s*/).join(""),this.wrapper=null!==(t=this.shadowRoot.querySelector(`div[${e}]`))&&void 0!==t?t:void 0;const l=this.svg;this.svg=null!==(o=null===(s=this.wrapper)||void 0===s?void 0:s.querySelector(`svg[${i}]`))&&void 0!==o?o:void 0,this.svg!==l&&(this.svgComputedStyle=this.svg?window.getComputedStyle(this.svg):void 0),this.container=null!==(a=null===(r=this.svg)||void 0===r?void 0:r.querySelector(`span[${n}]`))&&void 0!==a?a:void 0,this.observe()}disconnectedCallback(){this.svg=void 0,this.svgComputedStyle=void 0,this.wrapper=void 0,this.container=void 0,this.observe()}attributeChangedCallback(){this.observe()}flushSvgDisplay(){const{svg:t}=this;t&&(t.style.display="inline",requestAnimationFrame((()=>{t.style.display=""})))}observe(){this.containerObserver.disconnect(),this.wrapperObserver.disconnect(),this.wrapper&&this.wrapperObserver.observe(this.wrapper),this.container&&this.containerObserver.observe(this.container),this.svgComputedStyle&&this.observeSVGStyle(this.svgComputedStyle)}observeSVGStyle(t){const e=()=>{const i=(()=>{const e=t.getPropertyValue("--preserve-aspect-ratio");if(e)return e.trim();return`x${(({textAlign:t,direction:e})=>{if(t.endsWith("left"))return"Min";if(t.endsWith("right"))return"Max";if("start"===t||"end"===t){let i="rtl"===e;return"end"===t&&(i=!i),i?"Max":"Min"}return"Mid"})(t)}YMid meet`})();i!==this.svgPreserveAspectRatio&&(this.svgPreserveAspectRatio=i,this.updateSVGRect()),t===this.svgComputedStyle&&requestAnimationFrame(e)};e()}updateSVGRect(){var t,e,i,n,s,o,r;let a=Math.ceil(null!==(e=null===(t=this.containerSize)||void 0===t?void 0:t.width)&&void 0!==e?e:0);const l=Math.ceil(null!==(n=null===(i=this.containerSize)||void 0===i?void 0:i.height)&&void 0!==n?n:0);void 0!==this.dataset.downscaleOnly&&(a=Math.max(a,null!==(o=null===(s=this.wrapperSize)||void 0===s?void 0:s.width)&&void 0!==o?o:0));const c=null===(r=this.svg)||void 0===r?void 0:r.querySelector(":scope > foreignObject");if(null==c||c.setAttribute("width",`${a}`),null==c||c.setAttribute("height",`${l}`),this.svg&&(this.svg.setAttribute("viewBox",`0 0 ${a} ${l}`),this.svg.setAttribute("preserveAspectRatio",this.svgPreserveAspectRatio),this.svg.style.height=a<=0||l<=0?"0":""),this.container){const t=this.svgPreserveAspectRatio.toLowerCase();this.container.style.marginLeft=t.startsWith("xmid")||t.startsWith("xmax")?"auto":"0",this.container.style.marginRight=t.startsWith("xmi")?"auto":"0"}}}const o=(t,{attrs:e={},style:i})=>class extends t{constructor(...t){super(...t);for(const[t,i]of Object.entries(e))this.hasAttribute(t)||this.setAttribute(t,i);this.attachShadow({mode:"open"})}static get observedAttributes(){return["data-auto-scaling"]}connectedCallback(){this._update()}attributeChangedCallback(){this._update()}_update(){const t=i?`<style>:host { ${i} }</style>`:"";let e="<slot></slot>";const{autoScaling:n}=this.dataset;if(void 0!==n){e=`<marp-auto-scaling exportparts="svg:auto-scaling" ${"downscale-only"===n?"data-downscale-only":""}>${e}</marp-auto-scaling>`}this.shadowRoot.innerHTML=t+e}};let r;const a=Symbol();let l;const c="marpitSVGPolyfill:setZoomFactor,",d=Symbol(),g=Symbol();const h=()=>{const t="Apple Computer, Inc."===navigator.vendor,e=t?[u]:[],i={then:e=>(t?(async()=>{if(void 0===l){const t=document.createElement("canvas");t.width=10,t.height=10;const e=t.getContext("2d"),i=new Image(10,10),n=new Promise((t=>{i.addEventListener("load",(()=>t()))}));i.crossOrigin="anonymous",i.src="data:image/svg+xml;charset=utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%2210%22%20viewBox%3D%220%200%201%201%22%3E%3CforeignObject%20width%3D%221%22%20height%3D%221%22%20requiredExtensions%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%3Cdiv%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%20style%3D%22width%3A%201px%3B%20height%3A%201px%3B%20background%3A%20red%3B%20position%3A%20relative%22%3E%3C%2Fdiv%3E%3C%2FforeignObject%3E%3C%2Fsvg%3E",await n,e.drawImage(i,0,0),l=e.getImageData(5,5,1,1).data[3]<128}return l})().then((t=>{null==e||e(t?[u]:[])})):null==e||e([]),i)};return Object.assign(e,i)};let p,m;function u(t){const e="object"==typeof t&&t.target||document,i="object"==typeof t?t.zoom:t;window[g]||(Object.defineProperty(window,g,{configurable:!0,value:!0}),document.body.style.zoom=1.0001,document.body.offsetHeight,document.body.style.zoom=1,window.addEventListener("message",(({data:t,origin:e})=>{if(e===window.origin)try{if(t&&"string"==typeof t&&t.startsWith(c)){const[,e]=t.split(","),i=Number.parseFloat(e);Number.isNaN(i)||(m=i)}}catch(t){console.error(t)}})));let n=!1;Array.from(e.querySelectorAll("svg[data-marpit-svg]"),(t=>{var e,s,o,r;t.style.transform||(t.style.transform="translateZ(0)");const a=i||m||t.currentScale||1;p!==a&&(p=a,n=a);const l=t.getBoundingClientRect(),{length:c}=t.children;for(let i=0;i<c;i+=1){const n=t.children[i];if(n.getScreenCTM){const t=n.getScreenCTM();if(t){const i=null!==(s=null===(e=n.x)||void 0===e?void 0:e.baseVal.value)&&void 0!==s?s:0,c=null!==(r=null===(o=n.y)||void 0===o?void 0:o.baseVal.value)&&void 0!==r?r:0,d=n.children.length;for(let e=0;e<d;e+=1){const s=n.children[e];if("SECTION"===s.tagName){const{style:e}=s;e.transformOrigin||(e.transformOrigin=`${-i}px ${-c}px`),e.transform=`scale(${a}) matrix(${t.a}, ${t.b}, ${t.c}, ${t.d}, ${t.e-l.left}, ${t.f-l.top}) translateZ(0.0001px)`;break}}}}}})),!1!==n&&Array.from(e.querySelectorAll("iframe"),(({contentWindow:t})=>{null==t||t.postMessage(`${c}${n}`,"null"===window.origin?"*":window.origin)}))}function v({once:t=!1,target:e=document}={}){const i=function(t=document){if(t[d])return t[d];let e=!0;const i=()=>{e=!1,delete t[d]};Object.defineProperty(t,d,{configurable:!0,value:i});let n=[],s=!1;(async()=>{try{n=await h()}finally{s=!0}})();const o=()=>{for(const e of n)e({target:t});s&&0===n.length||e&&window.requestAnimationFrame(o)};return o(),i}(e);return t?(i(),()=>{}):i}p=1,m=void 0;const b=Symbol(),w=(e=document)=>{if("undefined"==typeof window)throw new Error("Marp Core's browser script is valid only in browser context.");if(((e=document)=>{const i=window[a];i||customElements.define("marp-auto-scaling",s);for(const n of Object.keys(t)){const s=`marp-${n}`,a=t[n].proto();null!=r||(r=!!document.createElement("div",{is:"marp-auto-scaling"}).outerHTML.startsWith("<div is")),r&&a!==HTMLElement?i||customElements.define(s,o(a,{style:t[n].style}),{extends:n}):(i||customElements.define(s,o(HTMLElement,t[n])),e.querySelectorAll(`${n}[is="${s}"]`).forEach((t=>{t.outerHTML=t.outerHTML.replace(new RegExp(`^<${n}`,"i"),`<${s}`).replace(new RegExp(`</${n}>$`,"i"),`</${s}>`)})))}window[a]=!0})(e),e[b])return e[b];const i=v({target:e}),n=()=>{i(),delete e[b]},l=Object.assign(n,{cleanup:n,update:()=>w(e)});return Object.defineProperty(e,b,{configurable:!0,value:l}),l},y=document.currentScript;w(y?y.getRootNode():document)}();

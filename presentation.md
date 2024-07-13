@@ -9,205 +9,146 @@ style: |
   }
 ---
 
-# Building Type Safe APIs
+# Schema-First API Development
 
 ---
 
-# Building Type Safe APIs\*
+# What is an API Schema?
 
-## With Rails
+- Describes the operations and structure of your API
+- Used as the source of truth for exposing HTTP services
 
 ---
 
-# Building Type Safe APIs\*
+# OpenAPI (aka Swagger)
 
-## With Rails\*
-
-### _(When You Can't Use GraphQL)_
+> The [OpenAPI Specification][] provides a formal standard for describing HTTP APIs.
 
 ---
 
 # Why?
 
-- Public API that needs end-user documentation
-- Different client / server teams (JS / Ruby)
-- Stakeholder communication
-
 ---
 
-# Making Your API "Type Safe"
+# Generate Client Code
 
-- Generate an OpenAPI specification
-- Validate requests and responses
-- Generate clients in target language(s)
-
----
-
-# OpenAPI
-
-> The OpenAPI Specification provides a formal standard for describing HTTP APIs.
-
-https://www.openapis.org/
-
----
-
-# Documenting Endpoints
-
-## With OpenAPI
-
----
-
-![height:700px](./images/post-list.png)
-
----
-
-# By Hand (YAML)
-
-```yaml
-paths:
-  /posts:
-    get:
-      tags:
-        - post
-      operationId: post-list
-      description: List all posts available
-      parameters: []
-      responses:
-        "200":
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  total:
-                    type: integer
-                  posts:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: number
-                        title:
-                          type: string
-                        body:
-                          type: string
-                        published_at:
-                          type: string
-                          format: date-time
-                          nullable: true
-```
-
----
-
-# Using Framework Tooling
-
-## ([Nest.js][nestjs-swagger])
-
-[nestjs-swagger]: https://docs.nestjs.com/openapi/introduction
-
----
+<div class="columns">
+  <div>
 
 ```typescript
-type ID = number;
-
-export class Post {
-  @ApiProperty()
-  id: ID;
-
-  @ApiProperty()
+export interface Post {
+  id: Uuid;
   title: string;
-
-  @ApiProperty()
   body: string;
-
-  @ApiProperty({ format: "date-time", nullable: true })
-  published_at: string | null;
+  /** @format date-time */
+  published_at?: string;
+  author: User;
 }
 
-@ApiExtraModels(Post)
-class Posts {
-  @ApiProperty()
-  total: number;
-
-  @ApiProperty({ allOf: [{ $ref: getSchemaPath(Post) }] })
-  posts: Array<Post>;
+export interface User {
+  id: Uuid;
+  email: Email;
+  name?: string;
 }
 
-@Controller("posts")
-@ApiTags("post")
-export class PostsController {
-  @Get()
-  @ApiOperation({
-    operationId: "posts-list",
-    description: "List all posts available",
-  })
-  @ApiResponse({ status: 200, description: "OK", type: Posts })
-  async index(): Promise<Posts> {
-    // return { total: 0, posts: [] };
-  }
+/** @format email */
+export type Email = string;
+
+/** @format uuid */
+export type Uuid = string;
+```
+
+  </div>
+  <div>
+
+```typescript
+/**
+ * @title My Service
+ * @version 0.0.0
+ */
+export class Api<
+  SecurityDataType extends unknown
+> extends HttpClient<SecurityDataType> {
+  posts = {
+    /**
+     * No description
+     *
+     * @name PostsList
+     * @request GET:/posts
+     */
+    postsList: (params: RequestParams = {}) =>
+      this.request<Post[], any>({
+        path: `/posts`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name PostsCreate
+     * @request POST:/posts
+     */
+    postsCreate: (
+      data: {
+        post: Post;
+      },
+      params: RequestParams = {}
+    ) =>
+      this.request<
+        Post,
+        {
+          message: string;
+        }
+      >({
+        path: `/posts`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name PostsFetch
+     * @request GET:/posts/{id}
+     */
+    postsFetch: (id: Uuid, params: RequestParams = {}) =>
+      this.request<
+        Post,
+        {
+          message: string;
+        }
+      >({
+        path: `/posts/${id}`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+  };
 }
 ```
 
----
-
-# Using Framework Tooling
-
-## [rswag][] (Ruby)
-
-[rswag]: https://github.com/rswag/rswag
+</div>
 
 ---
 
-```ruby
-require 'swagger_helper'
+# Provide Documentation
 
-describe 'Blog API' do
-  path '/blogs' do
-    get 'Fetch all posts' do
-      tags 'post'
-      consumes 'application/json'
-
-      response '200', 'blog found' do
-        schema({
-          type: :object,
-          properties: {
-            total: {type: :integer},
-            posts: {
-              type: :array,
-              items: {
-                type: :object,
-                properties: {
-                  id: { type: :integer },
-                  title: { type: :string },
-                  body: { type: :string },
-                  published_at: {type: :string, format: 'date-time', nullable: true}
-                }
-                required: [ 'id', 'title', 'body', 'published_at' ]
-              }
-            }
-          },
-          required: [ 'total', 'posts' ]
-        })
-
-        create(:post, title: 'Title', body: 'Body')
-        run_test!
-      end
-    end
-  end
-end
-```
+![height:600px](./assets/generated-ui.png)
 
 ---
 
-# Validation
+# Validate Interactions
 
-The [committee gem][committee] is a collection of middlewares that you can use to validate requests and responses to ensure they conform to your specification.
+---
 
-https://github.com/interagent/committee
+# [interagent/committee][]
 
-[committee]: [https://github.com/interagent/committee]
+> A collection of middleware to help build services with JSON Schema, OpenAPI 2, OpenAPI 3.
 
 ---
 
@@ -241,78 +182,70 @@ end
 
 ---
 
-# And that works pretty well ...
+# How?
+
+- Create a machine-readable specification
+- Publish for consumption
 
 ---
 
-# ... except ...
+# What Can I Do With This?
 
 ---
 
-# ... it's a total pain in the :peach:
+# Generate Documentation
 
 ---
 
-# Why Even Have Computers?
-
-- How can I manage a 5000+ line spec file by hand?
-- Why do I need to embed OpenAPI internals in my code?
+![height:700px](./assets/swagger-ui.png)
 
 ---
 
-![height:450px](./images/better-way.gif)
+# Tooling
+
+- [Swagger Codegen][swagger-codegen]
+- [Swagger UI][swagger-ui]
+- [OpenAPI Editor for VSCode][vscode-openapi]
 
 ---
 
-# TypeSpec
-
-> Describe your data up front and generate schemas, API specifications, client / server code, docs, and more.
-
-https://typespec.io/
+# Generate Client Libraries
 
 ---
 
-TypeSpec is to APIs as TypeScript is to code
+![height:700px](./assets/swagger-codegen.png)
 
 ---
 
-# [Service Definition][playground-basic]
+# Tooling
+
+- [Swagger Codegen][swagger-codegen]
+- [swagger-typescript-api][]
+- [openapi-zod-client][]
+- [openapi-generator][openapi-generator]
+
+---
+
+# Life is Good, Right?
+
+---
+
+# But ...
+
+---
+
+# Have you tried to edit an OpenAPI spec by hand?
+
+---
 
 <div class="columns">
-  <div>
-
-```typespec
-import "@typespec/http";
-import "@typespec/openapi";
-
-using TypeSpec.Http;
-
-model Posts {
-  total: int32;
-  posts: Array<{
-    id: int32;
-    title: string;
-    body: string;
-    published_at: utcDateTime | null;
-  }>;
-}
-
-@service
-namespace BlogService {
-  @route("posts")
-  @get
-  op list(): Posts;
-}
-```
-
-  </div>
   <div>
 
 ```yaml
 paths:
   /posts:
     get:
-      operationId: list
+      operationId: posts-list
       parameters: []
       responses:
         "200":
@@ -320,64 +253,68 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Posts"
-components:
-  schemas:
-    Posts:
-      type: object
-      required:
-        - total
-        - posts
-      properties:
-        total:
-          type: integer
-          format: int32
-        posts:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-                format: int32
-              title:
-                type: string
-              body:
-                type: string
-              published_at:
-                type: string
-                format: date-time
-                nullable: true
-            required:
-              - id
-              - title
-              - body
-              - published_at
-```
-
-  </div>
-</div>
-
----
-
-# Unlocking the Power of TypeSpec
-
----
-
-# [String Aliases][playground-advanced]
-
-<div class="columns">
-  <div>
-
-```typespec
-@format("uuid")
-scalar UUID extends string;
-
-@format("email")
-scalar Email extends string;
-
-@format("uri")
-scalar URI extends string;
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      operationId: posts-create
+      parameters: []
+      responses:
+        "201":
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "422":
+          description: Client error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                post:
+                  $ref: "#/components/schemas/Post"
+              required:
+                - post
+  /posts/{id}:
+    get:
+      operationId: posts-fetch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/uuid"
+      responses:
+        "200":
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
 ```
 
   </div>
@@ -386,13 +323,41 @@ scalar URI extends string;
 ```yaml
 components:
   schemas:
-    Email:
+    Post:
+      type: object
+      required:
+        - id
+        - title
+        - body
+        - author
+      properties:
+        id:
+          $ref: "#/components/schemas/uuid"
+        title:
+          type: string
+        body:
+          type: string
+        published_at:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/User"
+    User:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          $ref: "#/components/schemas/uuid"
+        email:
+          $ref: "#/components/schemas/email"
+        name:
+          type: string
+    email:
       type: string
       format: email
-    URI:
-      type: string
-      format: uri
-    UUID:
+    uuid:
       type: string
       format: uuid
 ```
@@ -402,16 +367,269 @@ components:
 
 ---
 
-# [Using Aliases][playground-advanced]
+# When it's 6000+ lines long?
+
+---
+
+# You're in for a bad time ...
+
+---
+
+# Can we automate this?
+
+---
+
+# Tooling in Ruby
+
+---
+
+# Code-First
+
+---
+
+# [swagger_blocks][swagger_blocks]
+
+<div class="columns">
+  <div>
+
+- Code-first approach to defining a schema ✅
+- Requires knowledge of OpenAPI syntax ❌
+- Object re-use is not obvious 🤷🏻‍♂️
+
+  </div>
+  <div>
+
+```ruby
+class PetsController < ActionController::Base
+  include Swagger::Blocks
+
+  swagger_path '/pets/{id}' do
+    operation :get do
+      key :summary, 'Find Pet by ID'
+      key :description, 'Returns a single pet if the user has access'
+      key :operationId, 'findPetById'
+      key :tags, [
+        'pet'
+      ]
+      parameter do
+        key :name, :id
+        key :in, :path
+        key :description, 'ID of pet to fetch'
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'pet response'
+        schema do
+          key :'$ref', :Pet
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+    end
+  end
+  # ...
+end
+```
+
+  </div>
+</div>
+
+---
+
+# [grape-swagger][grape-swagger]
+
+<div class="columns">
+  <div>
+
+- Hides complexity of OpenAPI spec ✅
+- Only supports OpenAPI version 2.0 ❌
+- Requires additional dependencies 🤷🏻‍♂️
+- Difficult to integrate with existing Rails app ❌
+
+  </div>
+  <div>
+
+```ruby
+module API
+  module Entities
+    class Horse < Grape::Entity
+      include API::Entities::Defaults
+
+      expose :size, documentation: { type: Integer }
+      expose :age, documentation: { type: Integer }
+      expose :gender, documentation: { type: Integer }
+      expose :hussar, using: Entities::Base, documentation: { type: Integer, desc: 'Identity of associated Hussar' }
+    end
+
+    class Hussar < Grape::Entity
+      format_with(:iso_timestamp) { |dt| dt.iso8601 }
+      with_options(format_with: :iso_timestamp) do
+        expose :created_at
+        expose :updated_at
+      end
+
+      include API::Entities::Defaults
+
+      expose :born, documentation: { type: String, desc: 'Birthday of Hussar' }
+      expose :size, documentation: { type: Integer }
+      expose :age, documentation: { type: Integer }
+      expose :gender, documentation: { type: Integer }
+      expose :horses, using: Entities::Base, documentation: { type: Array, desc: 'Horses of Hussar', is_array: true }
+    end
+  end
+end
+```
+
+  </div>
+</div>
+
+---
+
+# Spec-First
+
+---
+
+# [rswag][rswag]
+
+<div class="columns">
+  <div>
+
+- Most popular library for generating OpenAPI for Ruby ✅
+- Requires understanding OpenAPI syntax ❌
+- Requires the use of RSpec 🤷🏻‍♂️
+
+  </div>
+  <div>
+
+```ruby
+# spec/requests/blogs_spec.rb
+require 'swagger_helper'
+
+describe 'Blogs API' do
+
+  path '/blogs' do
+
+    post 'Creates a blog' do
+      tags 'Blogs'
+      consumes 'application/json'
+      parameter name: :blog, in: :body, schema: {
+        type: :object,
+        properties: {
+          title: { type: :string },
+          content: { type: :string }
+        },
+        required: [ 'title', 'content' ]
+      }
+
+      response '201', 'blog created' do
+        let(:blog) { { title: 'foo', content: 'bar' } }
+        run_test!
+      end
+
+      response '422', 'invalid request' do
+        let(:blog) { { title: 'foo' } }
+        run_test!
+      end
+    end
+  end
+
+  # ...
+end
+```
+
+  </div>
+</div>
+
+---
+
+# [rspec-openapi][rspec-openapi]
+
+<div class="columns">
+  <div>
+
+- Doesn't require additional spec configuration ✅
+- Supports latest OpenAPI version (3.x) ✅
+- Must be using RSpec (minitest support is experimental) 🤷🏻‍♂️
+- May not capture all responses ❌
+
+</div>
+  <div>
+
+```ruby
+RSpec.describe 'Tables', type: :request do
+  describe '#index' do
+    it 'returns a list of tables' do
+      get '/tables', params: { page: '1', per: '10' }, headers: { authorization: 'k0kubun' }
+      expect(response.status).to eq(200)
+    end
+
+    it 'does not return tables if unauthorized' do
+      get '/tables'
+      expect(response.status).to eq(401)
+    end
+  end
+
+  # ...
+end
+```
+
+  </div>
+</div>
+
+---
+
+# What would a sane spec-first approach look like?
+
+---
+
+![bg](./assets/typespec-homepage.png)
+
+---
+
+# TypeSpec
+
+- Began life as [CADL][] (Concise API Design Language)
+- Transpiled language with multiple emitters (targets)
+- TypeSpec is to API specs as TypeScript is to JavaScript
+
+---
+
+# What can it do?
+
+---
+
+# [Try it Out][local-playground]
+
+---
+
+# Recap
+
+---
+
+# Models
 
 <div class="columns">
   <div>
 
 ```typespec
 model User {
-  id: UUID;
-  email: Email;
-  website_uri: URI;
+  id: int32;
+  email: string;
+  name?: string;
+}
+
+model Post {
+  id: string;
+  title: string;
+  body: string;
+  published_at?: utcDateTime;
+  author: User;
 }
 ```
 
@@ -419,21 +637,203 @@ model User {
   <div>
 
 ```yaml
+schemas:
+  Post:
+    type: object
+    required:
+      - id
+      - title
+      - body
+      - author
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      body:
+        type: string
+      published_at:
+        type: string
+        format: date-time
+      author:
+        $ref: "#/components/schemas/User"
+  User:
+    type: object
+    required:
+      - id
+      - email
+    properties:
+      id:
+        type: integer
+        format: int32
+      email:
+        type: string
+      name:
+        type: string
+```
+
+  </div>
+</div>
+
+---
+
+# Aliases
+
+<div class="columns">
+  <div>
+
+```typespec
+@format("uuid")
+scalar uuid extends string;
+
+@format("email")
+scalar email extends string;
+
+@format("uri")
+scalar uri extends string;
+
+scalar id extends int32;
+```
+
+  </div>
+  <div>
+
+```yaml
+schemas:
+  email:
+    type: string
+    format: email
+  id:
+    type: integer
+    format: int32
+  uri:
+    type: string
+    format: uri
+  uuid:
+    type: string
+    format: uuid
+```
+
+  </div>
+</div>
+
+---
+
+# Operations
+
+<div class="columns">
+  <div>
+
+```typespec
+import "@typespec/http";
+
+using TypeSpec.Http;
+
+model User {
+  id: string;
+}
+
+@route("users")
+op list(): Array<User>;
+
+@route("users/{id}")
+op fetch(id: string): User;
+```
+
+  </div>
+  <div>
+
+```yaml
+paths:
+  /users:
+    get:
+      operationId: list
+      parameters: []
+      responses:
+        "200":
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+  /users/{id}:
+    get:
+      operationId: fetch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
 components:
   schemas:
     User:
       type: object
       required:
         - id
-        - email
-        - website_uri
       properties:
         id:
-          $ref: "#/components/schemas/UUID"
-        email:
-          $ref: "#/components/schemas/Email"
-        website_uri:
-          $ref: "#/components/schemas/URI"
+          type: string
+```
+
+  </div>
+</div>
+
+---
+
+# Generics
+
+<div class="columns">
+  <div>
+
+```typespec
+model User {
+  id: int32;
+}
+
+model CollectionResponse<T> {
+  total: int32;
+  resources: Array<T>;
+}
+
+model Users is CollectionResponse<User>;
+```
+
+  </div>
+  <div>
+
+```yaml
+schemas:
+  User:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        type: integer
+        format: int32
+  Users:
+    type: object
+    required:
+      - total
+      - resources
+    properties:
+      total:
+        type: integer
+        format: int32
+      resources:
+        type: array
+        items:
+          $ref: "#/components/schemas/User"
 ```
 
   </div>
@@ -443,49 +843,38 @@ components:
 
 # Union Types
 
-```typespec
-alias HTTPSuccessStatus = 200 | 201;
-alias HTTPFailureStatus = 400 | 401 | 403 | 404 | 422;
-```
-
----
-
-# [Custom Error Responses][playground-advanced]
-
 <div class="columns">
   <div>
 
 ```typespec
-using TypeSpec.OpenAPI;
+import "@typespec/http";
+
 using TypeSpec.Http;
 
-@error
-model Error {
-  message: string;
+model User {
+  id: int32;
 }
 
-// Responses
-model HTTPSuccessResponse<Code extends HTTPSuccessStatus, T> {
-  @statusCode _: Code;
-  @body body: T;
+alias HTTPSuccessStatus = 200 | 201 | 301 | 302;
+alias HTTPErrorStatus = 400 | 401 | 403 | 404 | 422 | 500 /* ... */;
+alias StatusCode = HTTPSuccessStatus | HTTPErrorStatus;
+
+model SuccessResponse<Status extends HTTPSuccessStatus, B> {
+  @statusCode _: Status;
+  @body body: B;
 }
 
-model HTTPFailureResponse<Code extends HTTPFailureStatus> {
-  @statusCode _: Code;
-  @body body: Error;
+model ErrorResponse<Status extends HTTPErrorStatus> {
+  @statusCode _: Status;
+  @body body: {
+    message: string;
+  };
 }
 
-model OK<T> is HTTPSuccessResponse<200, T>;
-model Created<T> is HTTPSuccessResponse<201, T>;
-model Unauthorized is HTTPFailureResponse<401>;
-model NotFound is HTTPFailureResponse<404>;
-
-@service
-namespace UsersService {
-  @route("users/{id}")
-  @get
-  op fetch(id: UUID): OK<User> | NotFound | Unauthorized;
-}
+op list(): SuccessResponse<
+  200,
+  Array<User>
+> | ErrorResponse<401> | ErrorResponse<500>;
 ```
 
   </div>
@@ -493,34 +882,41 @@ namespace UsersService {
 
 ```yaml
 paths:
-  /users/{id}:
+  /:
     get:
-      operationId: fetch
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/UUID"
+      operationId: list
+      parameters: []
       responses:
         "200":
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
         "401":
           description: Access is unauthorized.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "404":
-          description: The server cannot find the requested resource.
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        "500":
+          description: Server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
 ```
 
   </div>
@@ -528,20 +924,169 @@ paths:
 
 ---
 
-# [Putting it All Together][demo]
+# Intersection Types
 
-[demo]: https://github.com/reagent/blog-openapi
+<div class="columns">
+  <div>
+
+```typespec
+model Person {
+  id: int32;
+}
+
+model Name {
+  name: string;
+}
+
+alias PersonWithName = Person & Name;
+
+@route("named")
+op named(): PersonWithName;
+
+@route("nameless")
+op nameless(): Person;
+```
+
+  </div>
+  <div>
+
+```yaml
+paths:
+  /named:
+    get:
+      operationId: named
+      parameters: []
+      responses:
+        "200":
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int32
+                  name:
+                    type: string
+                required:
+                  - id
+                  - name
+  /nameless:
+    get:
+      operationId: nameless
+      parameters: []
+      responses:
+        "200":
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+```
+
+  </div>
+</div>
 
 ---
 
-# Additional Resources
+# Transitioning Existing Specs
 
-- [TypeSpec Playground](https://typespec.io/playground)
-  - [Blog service example][playground-basic]
-  - [Service with failure modes][playground-advanced]
-- [OpenAPI (Swagger) Editor](https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi) - VSCode Plugin
-- [`additionalProperties` support in TypeSpec](https://typespec.io/docs/getting-started/typespec-for-openapi-dev#additionalproperties)
-- [`@jsonExample` decorator support](https://github.com/microsoft/typespec/issues/2700)
+---
 
-[playground-basic]: https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvaHR0cCI7CtIZb3BlbmFwaSI7Cgp1c2luZyBUeXBlU3BlYy5IdHRwOwoKbW9kZWwgUG9zdHMgewogIHRvdGFsOiBpbnQzMjsKICBwxBo6IEFycmF5PMQhICBpZMsgICB0aXRsZTogc3RyaW5nxhNib2R5zhJwdWJsaXNoZWRfYXQ6IHV0Y0RhdGVUaW1lIHwgbnVsbMQmfT47Cn0KCkBzZXJ2aWNlCm5hbWVzcGFjZSBCbG9nU8YW5QClQHJvdXRlKCLlAJ0iKcQSZ2V0CiAgb3AgbGlzdCgpOuYA0zsKfQ%3D%3D&e=%40typespec%2Fopenapi3&options=%7B%7D
-[playground-advanced]: https://typespec.io/playground?c=aW1wb3J0ICJAdHlwZXNwZWMvb3BlbmFwaSI7CtIcaHR0cCI7CgovLyDEC3M6Ly9qc29uLXNjaGVtYS5vcmcvdW5kZXJzdGFuZGluZy3LHi9yZWZlcmVuY2Uvc3RyaW5nI2J1aWx0LWluLWZvcm1hdHMKQMYJKCJ1dWlkIikKc2NhbGFyIFVVSUQgZXh0ZW5kcyDGPDsKyi1lbWFpbMouRcQP2y91cmnLW1JJ0ittb2RlbCBVc2VyIHsKICBpZDrlAIM7CiAgxWw6xmTEEHdlYnNpdGVfdXJpOsRNOwp95QEeVW5pb25zCmFsaWFzIEhUVFBTdWNjZXNzU3RhdHVzID0gMjAwIHwgMjAxO8slRmFpbHVyZcklNMUlNDAxxQYzxQY0xAYyMjsKCnVzaW5nIFR5cGVTcGVjLk9wZW5BUEk70BhIdHRw5AEAZXJyb3LnANxFxAzlAN1tZXNzYWdlOukA%2FuYAwFJlc3BvbnNlc8cx6wDDyBs8Q29kZekBPfEA5CwgVD7FYkBzxRDFLl86IMQI5AE6QGJvZHkgxAU6IFTFd8pq5wEI2mrtASnfZ8pn5QD2y2tPSzxUPiBp7QC9yXQyMDDkAMM7xyxDcmVhdGVk3TExzDFVbmF1dGhvcml6ZWTIM%2FAA2DQwMckwTm90Rm91btssND7kAcdzZXJ2aWNlCm5hbWVzcGFjZeUCqXNTxhfmAQtyb3V0ZSgidcQZL3tpZH0iKcQXZ2V0CiAgb3AgZmV0Y2go6ALYKTrkAQrERj4gfOoAiHztAMPkATc%3D&e=%40typespec%2Fopenapi3&options=%7B%7D
+# `$ref` is Your Friend
+
+<div class="columns">
+  <div>
+
+```yaml
+# legacy.yml
+
+paths:
+  /posts/{id}:
+    $ref: "./generated.yaml#/paths/~1posts~1%7Bid%7D"
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - posts
+      properties:
+        id:
+          $ref: "#/components/schemas/uuid"
+        posts:
+          type: array
+          items:
+            $ref: "./generated.yaml#/components/schemas/Post"
+    uuid:
+      type: string
+      format: uuid
+```
+
+  </div>
+  <div>
+
+```yaml
+# generated.yaml
+
+paths:
+  /posts/{id}:
+    get:
+      operationId: fetch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/uuid"
+      responses:
+        "200":
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+components:
+  schemas:
+    Post:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          $ref: "#/components/schemas/uuid"
+    uuid:
+      type: string
+      format: uuid
+```
+
+  </div>
+</div>
+
+---
+
+# Additional Links
+
+- [Documentation][typespec-docs]
+- [Typespec Playground][playground]
+- [TSP + Rails Integration][blog-openapi]
+- [OpenAPI Editor][vscode-openapi]
+
+[OpenAPI Specification]: https://swagger.io/specification/
+[interagent/committee]: https://github.com/interagent/committee
+[swagger_blocks]: https://github.com/fotinakis/swagger-blocks
+[grape-swagger]: https://github.com/ruby-grape/grape-swagger
+[rswag]: https://github.com/rswag/rswag
+[rspec-openapi]: https://github.com/exoego/rspec-openapi
+[swagger-codegen]: https://swagger.io/tools/swagger-codegen/
+[swagger-ui]: https://swagger.io/tools/swagger-ui/
+[vscode-openapi]: https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi
+[swagger-typescript-api]: https://github.com/acacode/swagger-typescript-api
+[openapi-zod-client]: https://github.com/astahmer/openapi-zod-client
+[openapi-generator]: https://github.com/OpenAPITools/openapi-generator
+[CADL]: https://www.infoworld.com/article/3683909/introducing-cadl-microsofts-concise-api-design-language.html
+[typespec-docs]: https://typespec.io/docs
+[playground]: https://typespec.io/playground
+[blog-openapi]: https://github.com/reagent/blog-openapi
+[local-playground]: https://github.com/reagent/typespec-presentation/playground
