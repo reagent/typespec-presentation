@@ -1089,4 +1089,4 @@ components:
 [typespec-docs]: https://typespec.io/docs
 [playground]: https://typespec.io/playground
 [blog-openapi]: https://github.com/reagent/blog-openapi
-[local-playground]: https://github.com/reagent/typespec-presentation/playground
+[local-playground]: https://github.com/reagent/typespec-presentation/tree/master/playground
