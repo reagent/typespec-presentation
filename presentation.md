@@ -924,6 +924,60 @@ paths:
 
 ---
 
+# Named Unions
+
+<div class="columns">
+  <div>
+
+```typespec
+model City {
+  name: string;
+}
+
+model State {
+  name: string;
+  abbreviation: string;
+}
+
+union Location {
+  City,
+  State
+}
+```
+
+  </div>
+  <div>
+
+```yaml
+schemas:
+  City:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+  Location:
+    anyOf:
+      - $ref: "#/components/schemas/City"
+      - $ref: "#/components/schemas/State"
+  State:
+    type: object
+    required:
+      - name
+      - abbreviation
+    properties:
+      name:
+        type: string
+      abbreviation:
+        type: string
+```
+
+  </div>
+</div>
+
+---
+
 # Intersection Types
 
 <div class="columns">

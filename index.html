@@ -1292,6 +1292,62 @@ op list(): SuccessResponse&lt;
   gap: 1rem;
 }
 ;">
+<h1 id="named-unions">Named Unions</h1>
+<div class="columns">
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-typespec">model City {
+  name: string;
+}
+
+model State {
+  name: string;
+  abbreviation: string;
+}
+
+union Location {
+  City,
+  State
+}
+</code></pre>
+  </div>
+  <div>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-yaml"><span class="hljs-attr">schemas:</span>
+  <span class="hljs-attr">City:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+    <span class="hljs-attr">required:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">name</span>
+    <span class="hljs-attr">properties:</span>
+      <span class="hljs-attr">name:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+  <span class="hljs-attr">Location:</span>
+    <span class="hljs-attr">anyOf:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/City&quot;</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">$ref:</span> <span class="hljs-string">&quot;#/components/schemas/State&quot;</span>
+  <span class="hljs-attr">State:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">object</span>
+    <span class="hljs-attr">required:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">name</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">abbreviation</span>
+    <span class="hljs-attr">properties:</span>
+      <span class="hljs-attr">name:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+      <span class="hljs-attr">abbreviation:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">string</span>
+</code></pre>
+  </div>
+</div>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="45" data-theme="uncover" data-style=".columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+" lang="en-US" style="--theme:uncover;--style:.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+;">
 <h1 id="intersection-types">Intersection Types</h1>
 <div class="columns">
   <div>
@@ -1349,7 +1405,7 @@ op nameless(): Person;
   </div>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="45" data-theme="uncover" data-style=".columns {
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="46" data-theme="uncover" data-style=".columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
@@ -1362,7 +1418,7 @@ op nameless(): Person;
 ;">
 <h1 id="transitioning-existing-specs">Transitioning Existing Specs</h1>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="46" data-theme="uncover" data-style=".columns {
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="47" data-theme="uncover" data-style=".columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
@@ -1436,7 +1492,7 @@ op nameless(): Person;
   </div>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="47" data-theme="uncover" data-style=".columns {
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="48" data-theme="uncover" data-style=".columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
